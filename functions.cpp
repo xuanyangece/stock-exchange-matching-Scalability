@@ -76,3 +76,31 @@ void create(std::string xml) {
         }
     }
 }
+
+/*
+    Access attribute from giving string.
+    In our deisn, it accesses the first one.
+*/
+std::string getAttribute(std::string remain, std::string attribute) {
+    std::string ans;
+    
+    if (attribute == NUM) {
+
+    }
+    else {
+        size_t pos = remain.find(attribute);
+        
+        // try to find open parenthesis
+        while (remain[pos] != '\"') {
+            pos++;
+        }
+
+        pos++; // skip open parenthesis
+        
+        while (remain[pos] != '\"') {
+            ans += remain[pos++];
+        }
+    }
+
+    return ans;
+}
