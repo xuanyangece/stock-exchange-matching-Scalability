@@ -1,17 +1,25 @@
 #include <iostream>
+#include <exception>
+#include <mutex>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <sys/select.h>
+#include <thread>
+#include <unistd.h>
+#include <string>
 
-void handleXML(int reqfd); // parse
+void handleXML(int client_fd); // parse
 
-void create(int reqfd); // create account or symbol
+void create(std::string xml); // create account or symbol
 
-void createAccount(int reqfd);
+void createAccount(int id, int balance);
 
-void createSymbol(int reqfd);
+void createSymbol(int id, std::string symbol, int amount);
 
-void transactions(int reqfd); // deal with transactions
+void transactions(std::string xml); // deal with transactions
 
-void order(int reqfd);
+void order(int client_fd);
 
-void cancel(int reqfd);
+void cancel(int client_fd);
 
-void query(int reqfd);
+void query(int client_fd);

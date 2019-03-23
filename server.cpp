@@ -1,11 +1,3 @@
-#include <exception>
-#include <mutex>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <sys/select.h>
-#include <thread>
-#include <unistd.h>
-
 #include "functions.h"
 
 #define DEVELOPMENT 1                 // Development or production
@@ -58,6 +50,12 @@ int main(int argc, char ** argv) {
         std::cout << "Error in listening" << std::endl;
         exit(1);
     }
+
+
+    /*
+        Set up and initialize DB here 
+    */
+
 
     while (1) {
         // Get address info
