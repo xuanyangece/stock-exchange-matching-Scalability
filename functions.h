@@ -12,9 +12,9 @@ void handleXML(int client_fd); // parse
 
 void create(std::string xml); // create account or symbol
 
-void createAccount(int id, int balance);
+void createAccount(std::string id, std::string balance);
 
-void createSymbol(int id, std::string symbol, int amount);
+void createSymbol(std::string id, std::string symbol, std::string amount);
 
 void transactions(std::string xml); // deal with transactions
 
@@ -23,3 +23,5 @@ void order(int client_fd);
 void cancel(int client_fd);
 
 void query(int client_fd);
+
+std::string getAttribute(std::string remain, std::string attribute);
