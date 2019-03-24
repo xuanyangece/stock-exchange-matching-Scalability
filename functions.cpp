@@ -47,15 +47,14 @@ void handleXML(int client_fd) {
 void create(std::string xml) {
     // Parse by line, greedy
     while (1) {
-        // Get line by line break's position
+        // Get line by line break's position, xml stands for the remaining content to be parsed
         size_t linebreak = xml.find('\n');
-
         if (linebreak == std::string::npos) break;
 
         std::string line = xml.substr(0, linebreak);
 
         if (line.find("account") != std::string::npos) {
-            // Create account: pass line is enough
+            // Create account: parse one line is enough
             std::string id = getAttribute(line, ID);
             std::string balance = getAttribute(line, BALANCE);
             createAccount(id, balance);
@@ -64,15 +63,22 @@ void create(std::string xml) {
             xml = xml.substr(linebreak + 1);
         }
         else if (line.find("symbol") != std::string::npos) {
-            // Create symbol: need to pass remain xml because of multiple lines
-            std::string id = getAttribute(xml, ID);
-            std::string symbol = getAttribute(xml, SYM);
-            std::string amount = getAttribute(xml, NUM);
-            createSymbol(id, symbol, amount);
+            // Create symbol: need to parse the whole symbol tag
+            std::string symbol = getAttribute(line, SYM);
+            
+            // Get the info inside symbol tag
+            size_t start = xml.find('\n') + 1;      // skip the <symbol ...> line
+            size_t end = xml.find("</symbol>");     // end before </symbol>, containing line break!
+            std::string accounts = xml.substr(start, end);
 
-            // Skil multiple lines
-            size_t end_of_sym = xml.find("</symbol>");
-            xml = xml.substr(end_of_sym + 10); // skip the word "</symbol>"
+            parseSymbol(accounts, symbol);
+
+            // Skip the entire symbol tag
+            xml = xml.substr(end + 10);
+        }
+        else {
+            // Otherwise skip one line
+            xml = xml.substr(linebreak + 1);
         }
     }
 }
@@ -85,7 +91,11 @@ std::string getAttribute(std::string remain, std::string attribute) {
     std::string ans;
     
     if (attribute == NUM) {
-
+        // NUM is between first '>' and second '<'
+        size_t pos = remain.find('>') + 1;
+        while (remain[pos] != '<') {
+            ans += remain[pos++];
+        }
     }
     else {
         size_t pos = remain.find(attribute);
@@ -103,4 +113,23 @@ std::string getAttribute(std::string remain, std::string attribute) {
     }
 
     return ans;
+}
+
+/*
+    Parse the entire symbol body:
+    Do greedy to find all acounts and number of symbols to be added.
+*/
+void parseSymbol(std::string accounts, std::string symbol) {
+    // Basically access each line and call createSymbol
+    while (true) {
+        size_t linebreak = accounts.find('\n');
+        if (linebreak == std::string::npos) break; // end of parsing
+
+        std::string id = getAttribute(accounts, ID);
+        std::string amount = getAttribute(accounts, NUM);
+        createSymbol(id, symbol, amount);
+
+        // skip current acount
+        accounts = accounts.substr(linebreak + 1);
+    }
 }
