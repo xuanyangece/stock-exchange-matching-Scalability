@@ -20,10 +20,10 @@ void createSymbol(std::string id, std::string symbol, std::string amount);
 
 void transactions(std::string xml); // deal with transactions
 
-void order(int client_fd);
+void order(std::string account_id, std::string symbol, std::string amount, std::string limit);
 
-void cancel(int client_fd);
+void cancel(std::string account_id, std::string trans_id);
 
-void query(int client_fd);
+void query(std::string account_id, std::string trans_id);
 
 std::string getAttribute(std::string remain, std::string attribute);

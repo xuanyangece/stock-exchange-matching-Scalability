@@ -2,10 +2,14 @@
 
 #define DEBUG 1
 #define BUFFSIZE 40960
+
+// All for fixed string
 #define ID "id"
 #define BALANCE "balance"
 #define SYM "sym"
 #define NUM "num"
+#define AMOUNT "amount"
+#define LIMIT "limit"
 
 /*
     Receive XML from client and keep connection until invalid format.
@@ -24,7 +28,7 @@ void handleXML(int client_fd) {
 
         std::string xml(buffer);
 
-        if (DEBUG) std::cout<<"Buffer received from client: "<<std::endl<<xml<<std::endl;
+        if (DEBUG) std::cout<<std::endl<<"Buffer received from client: "<<std::endl<<xml<<std::endl<<std::endl;
 
         // Assume it's correct
         if (xml.find("<create>") != std::string::npos) {
@@ -138,5 +142,45 @@ void parseSymbol(std::string accounts, std::string symbol) {
     Parse transactions and dispatch different request.
 */
 void transactions(std::string xml) {
+    // Access account ID at first and get all requests
+    std::string account_id = getAttribute(xml, ID);
 
+    size_t start = xml.find('\n') + 1;  // // skip the <transactions ...> line
+    size_t end = xml.find("</transactions>");
+    std::string requests = xml.substr(start, end - start);
+
+    if (DEBUG) std::cout<<std::endl<<"All requests from transactions: "<<std::endl<<requests<<std::endl<<std::endl;
+
+    // Parse line by line: greedy
+    while (1) {
+        // Get line by linebreak's position, xml stands for the remaining content to be parsed
+        size_t linebreak = requests.find('\n');
+        if (linebreak == std::string::npos) break;
+
+        std::string line = xml.substr(0, linebreak);
+
+        if (line.find("order") != std::string::npos) {
+            // Access symbol, amount and limit
+            std::string symbol = getAttribute(line, SYM);
+            std::string amount = getAttribute(line, AMOUNT);
+            std::string limit = getAttribute(line, LIMIT);
+
+            order(account_id, symbol, amount, limit);
+        }
+        else if (line.find("query") != std::string::npos) {
+            // Access trans_id
+            std::string trans_id = getAttribute(line, ID);
+
+            query(account_id, trans_id);
+        }
+        else if (line.find("cancel") != std::string::npos) {
+            // Access trans_id
+            std::string trans_id = getAttribute(line, ID);
+
+            query(account_id, trans_id);
+        }
+
+        // Skip one line
+        requests = requests.substr(linebreak + 1);
+    }
 }
