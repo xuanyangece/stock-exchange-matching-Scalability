@@ -42,7 +42,7 @@ void handleXML(int client_fd) {
 }
 
 /*
-    Create symbol or account.
+    Parse create and dispatch different request.
 */
 void create(std::string xml) {
     // Parse by line, greedy
@@ -69,7 +69,7 @@ void create(std::string xml) {
             // Get the info inside symbol tag
             size_t start = xml.find('\n') + 1;      // skip the <symbol ...> line
             size_t end = xml.find("</symbol>");     // end before </symbol>, containing line break!
-            std::string accounts = xml.substr(start, end);
+            std::string accounts = xml.substr(start, end - start);
 
             parseSymbol(accounts, symbol);
 
@@ -132,4 +132,11 @@ void parseSymbol(std::string accounts, std::string symbol) {
         // skip current acount
         accounts = accounts.substr(linebreak + 1);
     }
+}
+
+/*
+    Parse transactions and dispatch different request.
+*/
+void transactions(std::string xml) {
+
 }
