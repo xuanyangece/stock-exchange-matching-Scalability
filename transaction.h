@@ -4,6 +4,7 @@
 #include <pqxx/pqxx>
 #include <string>
 
+#include "functions.h"
 #include "table.h"
 
 using std::string;
@@ -19,6 +20,7 @@ class Transaction
   int num_open;
   int num_executed;
   int num_canceled;
+  long time;
 
  public:
   static void createTable(connection * C);
