@@ -27,17 +27,6 @@ class Account
   static double getBalance(connection * C, int _account_id);
 
   static void setBalance(connection * C, int _account_id, double _balance);
-
-  static bool isSymbolExists(connection * C, int _account_id, const string & _symbol_name);
-
-  static void addSymbol(connection * C, int _account_id, const string & _symbol_name, int amount);
-
-  static int getSymbolAmount(connection * C, int _account_id, const string & _symbol_name);
-
-  static int setSymbolAmount(connection * C,
-                             int _account_id,
-                             const string & _symbol_name,
-                             int amount);
 };
 
 #endif

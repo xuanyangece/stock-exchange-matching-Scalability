@@ -53,3 +53,34 @@ bool Account::isAccountExists(connection * C, int _account_id) {
 
   return R.size() != 0;
 }
+
+double Account::getBalance(connection * C, int _account_id) {
+  /* Create a non-transactional object. */
+  nontransaction N(*C);
+
+  /* Create SQL statement */
+  std::stringstream sql;
+  sql << "SELECT BALANCE FROM ACCOUNT WHERE ACCOUNT_ID=";
+  sql << N.quote(_account_id) << ";";
+
+  /* Execute SQL query */
+  result R(N.exec(sql.str()));
+
+  return R[0][0].as<double>();
+}
+
+void Account::setBalance(connection * C, int _account_id, double _balance) {
+  /* Create a non-transactional object. */
+  work W(*C);
+
+  /* Create SQL statement */
+  std::stringstream sql;
+  sql << "UPDATE ACCOUNT SET BALANCE=";
+  sql << W.quote(_balance) << " ";
+  sql << "WHERE ACCOUNT_ID=";
+  sql << W.quote(_account_id) << ";";
+
+  /* Execute SQL query */
+  W.exec(sql.str());
+  W.commit();
+}

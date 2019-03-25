@@ -316,12 +316,12 @@ const std::string createSymbol(connection * C,
   }
 
   // Account exists, update its share amount
-  if (!Account::isSymbolExists(C, account_id, symbol_name)) {
-    Account::addSymbol(C, account_id, symbol_name, num_share);
+  if (!Position::isSymbolExists(C, account_id, symbol_name)) {
+    Position::addPosition(C, symbol_name, account_id, num_share);
   }
   else {
-    int old_amount = Account::getSymbolAmount(C, account_id, symbol_name);
-    Account::setSymbolAmount(C, account_id, symbol_name, old_amount + num_share);
+    int old_amount = Position::getSymbolAmount(C, account_id, symbol_name);
+    Position::setSymbolAmount(C, account_id, symbol_name, old_amount + num_share);
   }
 
   std::stringstream response;
