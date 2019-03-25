@@ -3,6 +3,7 @@
 #include <pqxx/pqxx>
 
 #include "account.h"
+#include "functions.h"
 #include "position.h"
 #include "table.h"
 #include "transaction.h"
@@ -47,6 +48,17 @@ int main(int argc, char * argv[]) {
   }
 
   // exercise(C);
+
+  std::cout << createAccount(C, "1001", "1000");
+  std::cout << createAccount(C, "1002", "1000");
+  std::cout << createAccount(C, "1003", "1000");
+
+  std::cout << createAccount(C, "1004a", "1000");
+  std::cout << createAccount(C, "1004", "10a00");
+  std::cout << createAccount(C, "1004", "-1000");
+  std::cout << createAccount(C, "1004", "1000");
+
+  std::cout << createAccount(C, "1001", "1000");
 
   // Close database connection
   C->disconnect();
