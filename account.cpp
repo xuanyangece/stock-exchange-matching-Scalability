@@ -23,7 +23,7 @@ void Account::buildForeignKeys(connection * C) {
 }
 
 /* Add a new entry to the table */
-void Account::addEntry(connection * C, int _account_id, double _balance) {
+void Account::addAccount(connection * C, int _account_id, double _balance) {
   /* Create a transactional object. */
   work W(*C);
 
