@@ -202,36 +202,29 @@ const std::string createAccount(connection * C,
                                 const std::string & balance_str) {
   // Check if account is all digits
   if (!isDigits(account_id_str)) {
-    return getCreateError(account_id_str, "Account is not all digits");
+    return getCreateAccountError(account_id_str, "Account is not all digits");
   }
 
   // Check if balance is double
   if (!isDouble(balance_str)) {
-    return getCreateError(account_id_str, "Balance is not a decimal number");
+    return getCreateAccountError(account_id_str, "Balance is not a decimal number");
   }
 
   int account_id;
   double balance;
 
-  std::stringstream ss1;
-  ss1 << account_id_str;
-  ss1 >> account_id;
-
-  std::stringstream ss2;
-  ss2 << balance_str;
-  ss2 >> balance;
-
-  // std::cout << "account_id: " << account_id << std::endl;
-  // std::cout << "balance: " << balance << std::endl;
+  std::stringstream ss;
+  ss << account_id_str << " " << balance_str;
+  ss >> account_id >> balance;
 
   // Check if balance is not negative
   if (balance < 0) {
-    return getCreateError(account_id_str, "Balance is negative");
+    return getCreateAccountError(account_id_str, "Balance is negative");
   }
 
   // Check if account already exists
-  if (isAccountExists(C, account_id)) {
-    return getCreateError(account_id_str, "Account already exists");
+  if (Account::isAccountExists(C, account_id)) {
+    return getCreateAccountError(account_id_str, "Account already exists");
   }
 
   // Account not exists, create it
@@ -256,19 +249,18 @@ bool isDigits(const std::string & str) {
   return true;
 }
 
-bool isAccountExists(connection * C, int account_id) {
-  /* Create a non-transactional object. */
-  nontransaction N(*C);
+bool isAlphaDigits(const std::string & str) {
+  if (str.empty()) {
+    return false;
+  }
 
-  /* Create SQL statement */
-  std::stringstream sql;
-  sql << "SELECT * FROM ACCOUNT WHERE ACCOUNT_ID=";
-  sql << N.quote(account_id) << ";";
+  for (std::string::const_iterator it = str.begin(); it != str.end(); ++it) {
+    if (!std::isalpha(*it) && !std::isdigit(*it)) {
+      return false;
+    }
+  }
 
-  /* Execute SQL query */
-  result R(N.exec(sql.str()));
-
-  return R.size() != 0;
+  return true;
 }
 
 bool isDouble(const std::string & str) {
@@ -280,7 +272,8 @@ bool isDouble(const std::string & str) {
   return !ss.fail() && ss.eof();
 }
 
-const std::string getCreateError(const std::string & account_id_str, const std::string & msg) {
+const std::string getCreateAccountError(const std::string & account_id_str,
+                                        const std::string & msg) {
   std::stringstream response;
 
   response << "  <error ";
@@ -292,6 +285,56 @@ const std::string getCreateError(const std::string & account_id_str, const std::
 }
 
 const std::string createSymbol(connection * C,
-                               std::string id,
-                               std::string symbol,
-                               std::string amount) {}
+                               std::string account_id_str,
+                               std::string symbol_name,
+                               std::string num_share_str) {
+  // Check if symbol is alphanumeric
+  if (!isAlphaDigits(symbol_name)) {
+    return getCreateSymbolError(account_id_str, symbol_name, "Symbol is not alphanumeric");
+  }
+
+  // Check if account is all digits
+  if (!isDigits(account_id_str)) {
+    return getCreateSymbolError(account_id_str, symbol_name, "Account is not all digits");
+  }
+
+  // Check if amount is a positive integer
+  if (!isDigits(num_share_str) || num_share_str[0] == '0') {
+    return getCreateSymbolError(account_id_str, symbol_name, "Amount is not a positive integer");
+  }
+
+  int account_id;
+  int num_share;
+
+  std::stringstream ss;
+  ss << account_id_str << " " << num_share_str;
+  ss >> account_id >> num_share;
+
+  // Check if account already exists
+  if (!Account::isAccountExists(C, account_id)) {
+    return getCreateSymbolError(account_id_str, symbol_name, "Account doesn't exist");
+  }
+
+  // Account exists, update its share amount
+  Account::addEntry(C, account_id, balance);
+
+  std::stringstream response;
+  response << "  <created ";
+  response << "sym=\"" << symbol_name << "\" ";
+  response << "id=\"" << account_id_str << "\"/>\n";
+  return response.str();
+}
+
+const std::string getCreateSymbolError(const std::string & account_id_str,
+                                       std::string symbol_name,
+                                       const std::string & msg) {
+  std::stringstream response;
+
+  response << "  <error ";
+  response << "sym=\"" << symbol_name << "\" ";
+  response << "id=\"" << account_id_str << "\">";
+  response << msg;
+  response << "<error>\n";
+
+  return response.str();
+}

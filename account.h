@@ -17,8 +17,22 @@ class Account
 
  public:
   static void createTable(connection * C);
+
   static void buildForeignKeys(connection * C);
+
   static void addEntry(connection * C, int _account_id, double _balance);
+
+  static bool isAccountExists(connection * C, int _account_id);
+
+  static double getBalance(connection * C, int _account_id);
+
+  static void setBalance(connection * C, int _account_id, double _balance);
+
+  static bool isSymbolExists(connection * C, int _account_id, const string & _symbol_name);
+
+  static int getSymbolAmount(connection * C, int _account_id, const string & _symbol_name);
+
+  static int setSymbolAmount(connection * C, int _account_id, const string & _symbol_name);
 };
 
 #endif

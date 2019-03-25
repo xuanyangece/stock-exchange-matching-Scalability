@@ -42,15 +42,20 @@ const std::string createAccount(connection * C,
 
 bool isDigits(const std::string & str);
 
-bool isAccountExists(connection * C, int account_id);
+bool isAlphaDigits(const std::string & str);
 
 bool isDouble(const std::string & str);
 
-const std::string getCreateError(const std::string & account_id_str, const std::string & msg);
+const std::string getCreateAccountError(const std::string & account_id_str,
+                                        const std::string & msg);
 
 const std::string createSymbol(connection * C,
-                               std::string id,
-                               std::string symbol,
-                               std::string amount);
+                               std::string account_id_str,
+                               std::string symbol_name,
+                               std::string num_share_str);
+
+const std::string getCreateSymbolError(const std::string & account_id_str,
+                                       std::string symbol_name,
+                                       const std::string & msg);
 
 #endif
