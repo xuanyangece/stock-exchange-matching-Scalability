@@ -20,7 +20,7 @@ class Account
 
   static void buildForeignKeys(connection * C);
 
-  static void addEntry(connection * C, int _account_id, double _balance);
+  static void addAccount(connection * C, int _account_id, double _balance);
 
   static bool isAccountExists(connection * C, int _account_id);
 
@@ -30,9 +30,14 @@ class Account
 
   static bool isSymbolExists(connection * C, int _account_id, const string & _symbol_name);
 
+  static void addSymbol(connection * C, int _account_id, const string & _symbol_name, int amount);
+
   static int getSymbolAmount(connection * C, int _account_id, const string & _symbol_name);
 
-  static int setSymbolAmount(connection * C, int _account_id, const string & _symbol_name);
+  static int setSymbolAmount(connection * C,
+                             int _account_id,
+                             const string & _symbol_name,
+                             int amount);
 };
 
 #endif
