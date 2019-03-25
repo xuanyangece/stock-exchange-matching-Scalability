@@ -20,10 +20,10 @@ class Position
  public:
   static void createTable(connection * C);
   static void buildForeignKeys(connection * C);
-  static void addEntry(connection * C,
-                       const string & _symbol_name,
-                       int _account_id,
-                       int _num_share);
+  static void addPosition(connection * C,
+                          const string & _symbol_name,
+                          int _account_id,
+                          int _num_share);
 };
 
 #endif

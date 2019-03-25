@@ -20,21 +20,29 @@
 
 using namespace pqxx;
 
-void handleXML(int client_fd);  // parse
+void handleXML(connection * C, int client_fd);  // parse
 
-void create(std::string xml);  // create account or symbol
+void create(connection * C, std::string xml);  // create account or symbol
 
-void parseSymbol(std::string accounts, std::string symbol);
+void parseSymbol(connection * C, std::string accounts, std::string symbol);
 
-void transactions(std::string xml);  // deal with transactions
+void transactions(connection * C, std::string xml);  // deal with transactions
 
-void order(std::string account_id, std::string symbol, std::string amount, std::string limit);
+const std::string order(connection * C,
+                        const std::string & account_id,
+                        const std::string & symbol,
+                        const std::string & amount,
+                        const std::string & limit);
 
-void cancel(std::string account_id, std::string trans_id);
+const std::string cancel(connection * C,
+                         const std::string & account_id,
+                         const std::string & trans_id);
 
-void query(std::string account_id, std::string trans_id);
+const std::string query(connection * C,
+                        const std::string & account_id,
+                        const std::string & trans_id);
 
-std::string getAttribute(std::string remain, std::string attribute);
+const std::string getAttribute(std::string remain, std::string attribute);
 
 const std::string createAccount(connection * C,
                                 const std::string & account_id_str,
@@ -50,12 +58,12 @@ const std::string getCreateAccountError(const std::string & account_id_str,
                                         const std::string & msg);
 
 const std::string createSymbol(connection * C,
-                               std::string account_id_str,
-                               std::string symbol_name,
-                               std::string num_share_str);
+                               const std::string & account_id_str,
+                               const std::string & symbol_name,
+                               const std::string & num_share_str);
 
 const std::string getCreateSymbolError(const std::string & account_id_str,
-                                       std::string symbol_name,
+                                       const std::string & symbol_name,
                                        const std::string & msg);
 
 #endif
