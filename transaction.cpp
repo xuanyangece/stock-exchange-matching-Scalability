@@ -31,13 +31,11 @@ void Transaction::buildForeignKeys(connection * C) {
 }
 
 /* Add a new entry to the table */
-void Transaction::addEntry(connection * C,
-                           int _account_id,
-                           const string & _symbol_name,
-                           double _limited,
-                           int _num_open,
-                           int _num_executed,
-                           int _num_canceled) {
+void Transaction::addTransaction(connection * C,
+                                 int _account_id,
+                                 const string & _symbol_name,
+                                 double _limited,
+                                 int _num_open) {
   /* Create a transactional object. */
   work W(*C);
 
@@ -51,8 +49,8 @@ void Transaction::addEntry(connection * C,
   sql << W.quote(_symbol_name) << ", ";
   sql << W.quote(_limited) << ", ";
   sql << W.quote(_num_open) << ", ";
-  sql << W.quote(_num_executed) << ", ";
-  sql << W.quote(_num_canceled) << ");";
+  sql << W.quote(0) << ", ";
+  sql << W.quote(0) << ");";
 
   W.exec(sql.str());
   W.commit();

@@ -28,10 +28,10 @@ void Position::buildForeignKeys(connection * C) {
 }
 
 /* Add a new entry to the table */
-void Position::addEntry(connection * C,
-                        const string & _symbol_name,
-                        int _account_id,
-                        int _num_share) {
+void Position::addPosition(connection * C,
+                           const string & _symbol_name,
+                           int _account_id,
+                           int _num_share) {
   /* Create a transactional object. */
   work W(*C);
 

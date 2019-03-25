@@ -14,7 +14,7 @@
 /*
     Receive XML from client and keep connection until invalid format.
 */
-void handleXML(int client_fd) {
+void handleXML(connection * C, int client_fd) {
   // loop and dispatch
   char buffer[BUFFSIZE];
 
@@ -37,10 +37,10 @@ void handleXML(int client_fd) {
 
     // Assume it's correct
     if (xml.find("<create>") != std::string::npos) {
-      create(xml);
+      create(C, xml);
     }
     else if (xml.find("<transactions>") != std::string::npos) {
-      transactions(xml);
+      transactions(C, xml);
     }
     else {
       // Close connection
@@ -53,7 +53,7 @@ void handleXML(int client_fd) {
 /*
     Parse create and dispatch different request.
 */
-void create(std::string xml) {
+void create(connection * C, std::string xml) {
   // Parse by line, greedy
   while (1) {
     // Get line by line break's position, xml stands for the remaining content to be parsed
@@ -67,7 +67,7 @@ void create(std::string xml) {
       // Create account: parse one line is enough
       std::string id = getAttribute(line, ID);
       std::string balance = getAttribute(line, BALANCE);
-      // createAccount(id, balance);
+      createAccount(C, id, balance);
 
       // Skip one line
       xml = xml.substr(linebreak + 1);
@@ -81,7 +81,7 @@ void create(std::string xml) {
       size_t end = xml.find("</symbol>");  // end before </symbol>, containing line break!
       std::string accounts = xml.substr(start, end - start);
 
-      parseSymbol(accounts, symbol);
+      parseSymbol(C, accounts, symbol);
 
       // Skip the entire symbol tag
       xml = xml.substr(end + 10);
@@ -97,7 +97,7 @@ void create(std::string xml) {
     Access attribute from giving string.
     In our design, it accesses the first one.
 */
-std::string getAttribute(std::string remain, std::string attribute) {
+const std::string getAttribute(std::string remain, std::string attribute) {
   std::string ans;
 
   if (attribute == NUM) {
@@ -129,7 +129,7 @@ std::string getAttribute(std::string remain, std::string attribute) {
     Parse the entire symbol body:
     Do greedy to find all acounts and number of symbols to be added.
 */
-void parseSymbol(std::string accounts, std::string symbol) {
+void parseSymbol(connection * C, std::string accounts, std::string symbol) {
   // Basically access each line and call createSymbol
   while (true) {
     size_t linebreak = accounts.find('\n');
@@ -138,7 +138,7 @@ void parseSymbol(std::string accounts, std::string symbol) {
 
     std::string id = getAttribute(accounts, ID);
     std::string amount = getAttribute(accounts, NUM);
-    // createSymbol(id, symbol, amount);
+    createSymbol(C, id, symbol, amount);
 
     // skip current acount
     accounts = accounts.substr(linebreak + 1);
@@ -148,7 +148,7 @@ void parseSymbol(std::string accounts, std::string symbol) {
 /*
     Parse transactions and dispatch different request.
 */
-void transactions(std::string xml) {
+void transactions(connection * C, std::string xml) {
   // Access account ID at first and get all requests
   std::string account_id = getAttribute(xml, ID);
 
@@ -177,19 +177,19 @@ void transactions(std::string xml) {
       std::string amount = getAttribute(line, AMOUNT);
       std::string limit = getAttribute(line, LIMIT);
 
-      // order(account_id, symbol, amount, limit);
+      order(C, account_id, symbol, amount, limit);
     }
     else if (line.find("query") != std::string::npos) {
       // Access trans_id
       std::string trans_id = getAttribute(line, ID);
 
-      // query(account_id, trans_id);
+      query(C, account_id, trans_id);
     }
     else if (line.find("cancel") != std::string::npos) {
       // Access trans_id
       std::string trans_id = getAttribute(line, ID);
 
-      // query(account_id, trans_id);
+      query(C, account_id, trans_id);
     }
 
     // Skip one line
@@ -285,9 +285,9 @@ const std::string getCreateAccountError(const std::string & account_id_str,
 }
 
 const std::string createSymbol(connection * C,
-                               std::string account_id_str,
-                               std::string symbol_name,
-                               std::string num_share_str) {
+                               const std::string & account_id_str,
+                               const std::string & symbol_name,
+                               const std::string & num_share_str) {
   // Check if symbol is alphanumeric
   if (!isAlphaDigits(symbol_name)) {
     return getCreateSymbolError(account_id_str, symbol_name, "Symbol is not alphanumeric");
@@ -332,7 +332,7 @@ const std::string createSymbol(connection * C,
 }
 
 const std::string getCreateSymbolError(const std::string & account_id_str,
-                                       std::string symbol_name,
+                                       const std::string & symbol_name,
                                        const std::string & msg) {
   std::stringstream response;
 
@@ -343,4 +343,24 @@ const std::string getCreateSymbolError(const std::string & account_id_str,
   response << "<error>\n";
 
   return response.str();
+}
+
+const std::string order(connection * C,
+                        const std::string & account_id,
+                        const std::string & symbol,
+                        const std::string & amount,
+                        const std::string & limit) {
+  return "";
+}
+
+const std::string cancel(connection * C,
+                         const std::string & account_id,
+                         const std::string & trans_id) {
+  return "";
+}
+
+const std::string query(connection * C,
+                        const std::string & account_id,
+                        const std::string & trans_id) {
+  return "";
 }
