@@ -37,3 +37,19 @@ void Account::addEntry(connection * C, int _account_id, double _balance) {
   W.exec(sql.str());
   W.commit();
 }
+
+/* Check if the given account already exists */
+bool Account::isAccountExists(connection * C, int _account_id) {
+  /* Create a non-transactional object. */
+  nontransaction N(*C);
+
+  /* Create SQL statement */
+  std::stringstream sql;
+  sql << "SELECT * FROM ACCOUNT WHERE ACCOUNT_ID=";
+  sql << N.quote(_account_id) << ";";
+
+  /* Execute SQL query */
+  result R(N.exec(sql.str()));
+
+  return R.size() != 0;
+}
