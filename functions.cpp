@@ -356,11 +356,56 @@ const std::string order(connection * C,
 const std::string cancel(connection * C,
                          const std::string & account_id,
                          const std::string & trans_id) {
-  return "";
+  // Check if account is all digits
+  if (!isDigits(account_id)) {
+    return getCreateAccountError(account_id, "Account is not all digits");
+  }
+
+  // Check if trans_id is all digits
+  if (!isDigits(trans_id)) {
+    return getTransIDError(trans_id, "Trans_id is not all digits");
+  }
+
+  
 }
 
 const std::string query(connection * C,
                         const std::string & account_id,
                         const std::string & trans_id) {
-  return "";
+  // Check if account is all digits
+  if (!isDigits(account_id)) {
+    return getCreateAccountError(account_id, "Account is not all digits");
+  }
+
+  // Check if trans_id is all digits
+  if (!isDigits(trans_id)) {
+    return getTransIDError(trans_id, "Trans_id is not all digits");
+  }
+}
+
+const std::string getTransIDError(const std::string & trans_id_str, const std::string & msg) {
+  std::stringstream response;
+
+  response << "  <error ";
+  response << "trans_id=\"" << trans_id_str << "\">";
+  response << msg;
+  response << "<error>\n";
+
+  return response.str();
+}
+
+const std::string getOrderError(const std::string & symbol_name, 
+                                        const std::string & amount, 
+                                        const std::string & limit,
+                                        const std::string & msg) {
+  std::stringstream response;
+
+  response << "  <error ";
+  response << "sym=\"" << symbol_name << "\" ";
+  response << "amount=\"" << amount << "\" ";
+  response << "limit=\"" << limit << "\">";
+  response << msg;
+  response << "<error>\n";
+
+  return response.str();
 }

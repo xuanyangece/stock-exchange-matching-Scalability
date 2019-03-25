@@ -66,4 +66,12 @@ const std::string getCreateSymbolError(const std::string & account_id_str,
                                        const std::string & symbol_name,
                                        const std::string & msg);
 
+const std::string getOrderError(const std::string & symbol_name, 
+                                        const std::string & amount, 
+                                        const std::string & limit,
+                                        const std::string & msg);
+
+const std::string getTransIDError(const std::string & trans_id_str, 
+                                        const std::string & msg);
+
 #endif
