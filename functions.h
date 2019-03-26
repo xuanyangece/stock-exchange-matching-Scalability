@@ -13,12 +13,14 @@
 #include <pqxx/pqxx>
 #include <string>
 #include <thread>
+#include <chrono>
 
 #include "account.h"
 #include "position.h"
 #include "transaction.h"
 
 using namespace pqxx;
+using namespace std::chrono;
 
 void handleXML(connection * C, int client_fd);  // parse
 
@@ -35,12 +37,12 @@ const std::string order(connection * C,
                         const std::string & limit);
 
 const std::string cancel(connection * C,
-                         const std::string & account_id,
-                         const std::string & trans_id);
+                         const std::string & account_id_str,
+                         const std::string & trans_id_str);
 
 const std::string query(connection * C,
-                        const std::string & account_id,
-                        const std::string & trans_id);
+                        const std::string & account_id_str,
+                        const std::string & trans_id_str);
 
 const std::string getAttribute(std::string remain, std::string attribute);
 
@@ -73,5 +75,7 @@ const std::string getOrderError(const std::string & symbol_name,
 
 const std::string getTransIDError(const std::string & trans_id_str, 
                                         const std::string & msg);
+
+long getEpoch();
 
 #endif

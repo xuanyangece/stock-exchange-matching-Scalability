@@ -354,19 +354,46 @@ const std::string order(connection * C,
 }
 
 const std::string cancel(connection * C,
-                         const std::string & account_id,
-                         const std::string & trans_id) {
+                         const std::string & account_id_str,
+                         const std::string & trans_id_str) {
   // Check if account is all digits
-  if (!isDigits(account_id)) {
-    return getCreateAccountError(account_id, "Account is not all digits");
+  if (!isDigits(account_id_str)) {
+    return getCreateAccountError(account_id_str, "Account is not all digits");
   }
 
   // Check if trans_id is all digits
-  if (!isDigits(trans_id)) {
-    return getTransIDError(trans_id, "Trans_id is not all digits");
+  if (!isDigits(trans_id_str)) {
+    return getTransIDError(trans_id_str, "Trans_id is not all digits");
   }
 
-  
+  int account_id;
+  int trans_id;
+
+  std::stringstream ss;
+  ss << account_id_str << " " << trans_id_str;
+  ss >> account_id >> trans_id;
+
+  // Check whether transaction exists
+  if (!Transaction::isTransExists(C, trans_id)) {
+    return getTransIDError(trans_id_str, "Trans_id doesn't exist");
+  }
+
+  // Transaction exists, check whether if can cancel
+  if (isTransCompleted(C, trans_id)) {
+    return getTransIDError(trans_id_str, "Transaction cannot be canceled");
+  }
+
+  // Can cancel, do it
+  Transaction::cancelTransaction(C);
+
+  std::string canceledShares = getCanceledShares(C, trans_id);
+  std::string canceledTime = getCanceledTime(C, trans_id);
+
+  std::stringstream response;
+  response << "  <canceled ";
+  response << "shares=" << canceledShares << " ";
+  response << "time=" << canceledTime << "/>\n";
+  return response.str();
 }
 
 const std::string query(connection * C,
@@ -408,4 +435,12 @@ const std::string getOrderError(const std::string & symbol_name,
   response << "<error>\n";
 
   return response.str();
+}
+
+long getEpoch() {
+  std::stringstream ss;
+  ss << duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
+  long time;
+  ss >> time;
+  return time;
 }
