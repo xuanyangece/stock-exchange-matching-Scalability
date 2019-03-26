@@ -4,6 +4,7 @@
 #include <pqxx/pqxx>
 #include <string>
 
+#include "functions.h"
 #include "table.h"
 
 using std::string;
@@ -24,7 +25,11 @@ class Execution
 
   static void buildForeignKeys(connection * C);
 
-  static void addExecution(connection * C);
+  static void addExecution(connection * C,
+                           int _buyer_trans_id,
+                           int _seller_trans_id,
+                           int _amount,
+                           double _price);
 };
 
 #endif

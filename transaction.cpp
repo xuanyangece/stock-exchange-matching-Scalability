@@ -56,3 +56,33 @@ void Transaction::addTransaction(connection * C,
   W.exec(sql.str());
   W.commit();
 }
+
+static bool isTransExists(connection * C, int trans_id) {
+  /* Create a non-transactional object. */
+  nontransaction N(*C);
+
+  /* Create SQL statement */
+  std::stringstream sql;
+  sql << "SELECT * FROM TRANSACTION WHERE TRANSACTION_ID=";
+  sql << N.quote(trans_id) << ";";
+
+  /* Execute SQL query */
+  result R(N.exec(sql.str()));
+
+  return R.size() != 0;
+}
+
+static bool isTransCanceled(connection * C, int trans_id) {
+  /* Create a non-transactional object. */
+  nontransaction N(*C);
+
+  /* Create SQL statement */
+  std::stringstream sql;
+  sql << "SELECT NUM_OPEN FROM TRANSACTION WHERE TRANSACTION_ID=";
+  sql << N.quote(trans_id) << ";";
+
+  /* Execute SQL query */
+  result R(N.exec(sql.str()));
+
+  return R[0][0].as<int>() == 0;
+}

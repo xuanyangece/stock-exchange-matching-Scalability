@@ -41,6 +41,10 @@ class Transaction
     若不匹配，结束
    */
 
+  static bool isTransExists(connection * C, int trans_id);
+
+  static bool isTransCompleted(connection * C, int trans_id);
+
   static void matchExecution();
 
   static void queryTransaction();
