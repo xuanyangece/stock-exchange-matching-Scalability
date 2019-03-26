@@ -387,7 +387,7 @@ const std::string cancel(connection * C,
   }
 
   // Can cancel, do it
-  Transaction::cancelTransaction(C);
+  Transaction::cancelTransaction(C, trans_id);
 
   int canceledShares = Transaction::getCanceledShares(C, trans_id);
   long canceledTime = Transaction::getCanceledTime(C, trans_id);
