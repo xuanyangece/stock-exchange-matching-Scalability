@@ -356,6 +356,9 @@ const std::string order(connection * C,
 const std::string cancel(connection * C,
                          const std::string & account_id_str,
                          const std::string & trans_id_str) {
+  const std::string header = "  <canceled id=\"" + trans_id_str + "\">\n";
+  const std::string tailer = "  </canceled>\n"
+  
   // Check if account is all digits
   if (!isDigits(account_id_str)) {
     return getCreateAccountError(account_id_str, "Account is not all digits");
@@ -375,45 +378,96 @@ const std::string cancel(connection * C,
 
   // Check whether transaction exists
   if (!Transaction::isTransExists(C, trans_id)) {
-    return getTransIDError(trans_id_str, "Trans_id doesn't exist");
+    return header + getTransIDError(trans_id_str, "Transaction doesn't exist") + tailer;
   }
 
   // Transaction exists, check whether if can cancel
-  if (isTransCompleted(C, trans_id)) {
-    return getTransIDError(trans_id_str, "Transaction cannot be canceled");
+  if (Transaction::isTransCompleted(C, trans_id)) {
+    return header + getTransIDError(trans_id_str, "Transaction cannot be canceled") + tailer;
   }
 
   // Can cancel, do it
   Transaction::cancelTransaction(C);
 
-  std::string canceledShares = getCanceledShares(C, trans_id);
-  std::string canceledTime = getCanceledTime(C, trans_id);
+  int canceledShares = Transaction::getCanceledShares(C, trans_id);
+  long canceledTime = Transaction::getCanceledTime(C, trans_id);
+  std::string allExecuted = Transaction::queryExecuted(C, trans_id);
 
   std::stringstream response;
-  response << "  <canceled ";
+  response << header;   // First line
+  response << "    <canceled ";
   response << "shares=" << canceledShares << " ";
   response << "time=" << canceledTime << "/>\n";
+  response << allExecuted;
+  response << tailer;
   return response.str();
 }
 
 const std::string query(connection * C,
-                        const std::string & account_id,
-                        const std::string & trans_id) {
+                        const std::string & account_id_str,
+                        const std::string & trans_id_str) {
+  const std::string header = "  <status id=\"" + trans_id_str + "\">\n";
+  const std::string tailer = "  </status>\n"
+  
   // Check if account is all digits
-  if (!isDigits(account_id)) {
-    return getCreateAccountError(account_id, "Account is not all digits");
+  if (!isDigits(account_id_str)) {
+    return header + getCreateAccountError(account_id_str, "Account is not all digits") + tailer;
   }
 
   // Check if trans_id is all digits
-  if (!isDigits(trans_id)) {
-    return getTransIDError(trans_id, "Trans_id is not all digits");
+  if (!isDigits(trans_id_str)) {
+    return header + getTransIDError(trans_id_str, "Trans_id is not all digits") + tailer;
   }
+
+  int account_id;
+  int trans_id;
+
+  std::stringstream ss;
+  ss << account_id_str << " " << trans_id_str;
+  ss >> account_id >> trans_id;
+
+  // Check whether transaction exists
+  if (!Transaction::isTransExists(C, trans_id)) {
+    return header + getTransIDError(trans_id_str, "Transaction doesn't exist") + tailer;
+  }
+
+  // Three components
+  std::stringstream openSharesResponse;
+  std::stringstream canceledResponse;
+  std::stringstream executedResponse;
+
+  // Get open shares if still has open remaining
+  int openShares = Transaction::getOpenShares(C, trans_id);
+  if (openShares > 0) {
+    openSharesResponse << "    <open shares=" << openShares << "/>\n";
+  }
+
+  // Get cancel shares if it has been canceled
+  if (Transaction::isTransCanceled) {
+    int canceledShares = Transaction::getCanceledShares(C, trans_id);
+    long canceledTime = Transaction::getCanceledTime(C, trans_id);
+    
+    canceledResponse << "    <canceled ";
+    canceledResponse << "shares=" << canceledShares << " ";
+    canceledResponse << "time=" << canceledTime << "/>\n";
+  }
+
+  // Get all executed transactions
+  executedResponse << Transaction::queryExecuted(C, trans_id);
+
+  std::stringstream response;
+  response << headers;    // First line
+  response << openSharesResponse;
+  response << canceledResponse;
+  response << executedResponse;
+  response << tailer;     // Last line
+  return response.str();
 }
 
 const std::string getTransIDError(const std::string & trans_id_str, const std::string & msg) {
   std::stringstream response;
 
-  response << "  <error ";
+  response << "    <error ";
   response << "trans_id=\"" << trans_id_str << "\">";
   response << msg;
   response << "<error>\n";
@@ -427,7 +481,7 @@ const std::string getOrderError(const std::string & symbol_name,
                                         const std::string & msg) {
   std::stringstream response;
 
-  response << "  <error ";
+  response << "    <error ";
   response << "sym=\"" << symbol_name << "\" ";
   response << "amount=\"" << amount << "\" ";
   response << "limit=\"" << limit << "\">";
