@@ -206,7 +206,7 @@ const std::string createAccount(connection * C,
   }
 
   // Check if balance is double
-  if (!isDouble(balance_str)) {
+  if (!isPositiveDouble(balance_str)) {
     return getCreateAccountError(account_id_str, "Balance is not a decimal number");
   }
 
@@ -263,13 +263,22 @@ bool isAlphaDigits(const std::string & str) {
   return true;
 }
 
-bool isDouble(const std::string & str) {
+bool isPositiveDouble(const std::string & str) {
   double result;
   std::stringstream ss(str);
 
   ss >> result;
 
-  return !ss.fail() && ss.eof();
+  return !ss.fail() && ss.eof() && result >= 0;
+}
+
+bool isNonZeroInt(const std::string & str) {
+  int result;
+  std::stringstream ss(str);
+
+  ss >> result;
+
+  return !ss.fail() && ss.eof() && result != 0;
 }
 
 const std::string getCreateAccountError(const std::string & account_id_str,
@@ -346,11 +355,93 @@ const std::string getCreateSymbolError(const std::string & account_id_str,
 }
 
 const std::string order(connection * C,
-                        const std::string & account_id,
+                        const std::string & account_id_str,
                         const std::string & symbol,
-                        const std::string & amount,
-                        const std::string & limit) {
-  return "";
+                        const std::string & amount_str,
+                        const std::string & limit_str) {
+  // Step 1: Check format
+  // account_id(digits) 
+  // symbol(AlphaDigits)
+  // amount(integer-nonzero)
+  // limit(double)
+
+  // Check if account is all digits
+  if (!isDigits(account_id_str)) {
+    return getOrderError(symbol, amount_str, limit_str, "Account_id is not all digits");
+  }
+
+  // Check if symbol is alphanumeric
+  if (!isAlphaDigits(symbol)) {
+    return getOrderError(symbol, amount_str, limit_str, "Symbol is not alphanumeric");
+  }
+
+  // Check if amount is non-zero integer
+  if (!isNonZeroInt(amount_str)) {
+    return getOrderError(symbol, amount_str, limit_str, "Amount is not non-zero integer");
+  }
+
+  // Check if limit is positive double
+  if (!isPositiveDouble(limit_str)) {
+    return getOrderError(symbol, amount_str, limit_str, "Limit is not double");
+  } 
+
+  // Step 2: DB validation
+  // account existence
+  // buy - amount * limit FROM balance
+  // sell - amount FROM position
+
+  int account_id;
+  int amount;
+  double limit;
+
+  std::stringstream ss;
+  ss << account_id_str << " " << amount_str << " " << limit_str;
+  ss >> account_id >> amount >> limit;
+
+  // Check if account exists
+  if (!Account::isAccountExists(C, account_id)) {
+    return getOrderError(symbol, amount_str, limit_str, "Account doesn't exist");
+  }
+
+  // Buy: check if account has enough amount * limit balance
+  if (amount > 0) {
+    double requiredBalance = amount * limit;
+    double ownedBalance = Account::getBalance(C, account_id);
+    double result = ownedBalance - requiredBalance;
+
+    if (result >= 0) {  // legal
+      Account::setBalance(C, account_id, result);
+    }
+    else {  // illegal
+      return getOrderError(symbol, amount_str, limit_str, "Account doesn't have enough balance to buy");
+    }
+  }
+  // Sell: check if account has enough position as amount
+  else {
+    int ownedAmount = Position::getSymbolAmount(C, account_id, symbol);
+    int result = ownedAmount - amount;
+
+    if (result >= 0) {  // legal
+      Position::setSymbolAmount(C, account_id, symbol, result);
+    }
+    else {  // illegal
+      return getOrderError(symbol, amount_str, limit_str, "Account doesn't have enough symbol to sell");
+    }
+  }
+
+  // Step 3: Create transaction
+  int trans_id = Transaction::addTransaction(C, account_id, symbol, amount);
+
+  // Step 4: Match one possible at a time
+  while (Transaction::trtMatch(C, trans_id)) {}
+
+  // Response will will not affected by match result
+  std::stringstream response;
+  response << "  <opened sym=\"" << symbol << "\" ";
+  response << "amount=\"" << amount_str << "\" ";
+  response << "limit=\"" << limit_str << "\" ";
+  response << "id=\"" << trans_id << "\"/>\n";
+  return response.str();
 }
 
 const std::string cancel(connection * C,
@@ -481,7 +572,7 @@ const std::string getOrderError(const std::string & symbol_name,
                                         const std::string & msg) {
   std::stringstream response;
 
-  response << "    <error ";
+  response << "  <error ";
   response << "sym=\"" << symbol_name << "\" ";
   response << "amount=\"" << amount << "\" ";
   response << "limit=\"" << limit << "\">";
