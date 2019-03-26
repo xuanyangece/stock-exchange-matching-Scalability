@@ -438,7 +438,7 @@ const std::string query(connection * C,
 
   // Get open shares if still has open remaining
   int openShares = Transaction::getOpenShares(C, trans_id);
-  if (openShares > 0) {
+  if (openShares != 0) {  // !!!!!!!!!!! buy & sell
     openSharesResponse << "    <open shares=" << openShares << "/>\n";
   }
 
