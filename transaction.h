@@ -18,9 +18,10 @@ class Transaction
   string symbol_name;
   double limited;
   int num_open;
-  int num_executed;
+  // int num_executed;
   int num_canceled;
-  long time;
+  long open_time;
+  long cancel_time;
 
  public:
   static void createTable(connection * C);
@@ -45,11 +46,27 @@ class Transaction
 
   static bool isTransCompleted(connection * C, int trans_id);
 
+  static bool isTransCanceled(connection * C, int trans_id);
+
   static void matchExecution();
 
-  static void queryTransaction();
+  // static void queryTransaction();
 
-  static void cancelTransaction();
+  static void cancelTransaction(connection * C, int trans_id);
+
+  static long getCanceledTime(connection * C, int trans_id);
+
+  static int getCanceledShares(connection * C, int trans_id);
+
+  static int getOpenShares(connection * C, int trans_id);
+
+  static void setOpenShares(connection * C, int trans_id, int amount);
+
+  static void setCanceledShares(connection * C, int trans_id, int amount);
+
+  static void setCanceledTime(connection * C, int trans_id, long time);
+
+  static const std::string queryExecuted(connection * C, int trans_id);
 };
 
 #endif
