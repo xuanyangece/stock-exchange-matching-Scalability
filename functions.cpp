@@ -357,7 +357,7 @@ const std::string cancel(connection * C,
                          const std::string & account_id_str,
                          const std::string & trans_id_str) {
   const std::string header = "  <canceled id=\"" + trans_id_str + "\">\n";
-  const std::string tailer = "  </canceled>\n"
+  const std::string tailer = "  </canceled>\n";
   
   // Check if account is all digits
   if (!isDigits(account_id_str)) {
@@ -407,7 +407,7 @@ const std::string query(connection * C,
                         const std::string & account_id_str,
                         const std::string & trans_id_str) {
   const std::string header = "  <status id=\"" + trans_id_str + "\">\n";
-  const std::string tailer = "  </status>\n"
+  const std::string tailer = "  </status>\n";
   
   // Check if account is all digits
   if (!isDigits(account_id_str)) {
@@ -456,10 +456,10 @@ const std::string query(connection * C,
   executedResponse << Transaction::queryExecuted(C, trans_id);
 
   std::stringstream response;
-  response << headers;    // First line
-  response << openSharesResponse;
-  response << canceledResponse;
-  response << executedResponse;
+  response << header;    // First line
+  response << openSharesResponse.str();
+  response << canceledResponse.str();
+  response << executedResponse.str();
   response << tailer;     // Last line
   return response.str();
 }
