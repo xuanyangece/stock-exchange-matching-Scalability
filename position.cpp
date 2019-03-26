@@ -38,8 +38,7 @@ void Position::addPosition(connection * C,
   /* Create SQL statement */
   std::stringstream sql;
   sql << "Insert INTO POSITION (POSITION_ID, SYMBOL_NAME, ACCOUNT_ID, NUM_SHARE) ";
-  sql << "VALUES (";
-  sql << W.quote("DEFAULT") << ", ";
+  sql << "VALUES ( DEFAULT, ";
   sql << W.quote(_symbol_name) << ", ";
   sql << W.quote(_account_id) << ", ";
   sql << W.quote(_num_share) << ");";

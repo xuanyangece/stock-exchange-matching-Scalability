@@ -16,7 +16,8 @@ void Transaction::createTable(connection * C) {
                           "LIMITED         REAL    NOT NULL, "
                           "NUM_OPEN        INT     NOT NULL, "
                           "NUM_EXECUTED    INT     NOT NULL, "
-                          "NUM_CANCELED    INT     NOT NULL);";
+                          "NUM_CANCELED    INT     NOT NULL, "
+                          "TIME            BIGINT  NOT NULL);";
 
   Table::createTable(C, dropExistingTableSql, createTableSql);
 }
@@ -42,15 +43,15 @@ void Transaction::addTransaction(connection * C,
   /* Create SQL statement */
   std::stringstream sql;
   sql << "Insert INTO TRANSACTION (TRANSACTION_ID, ACCOUNT_ID, SYMBOL_NAME, "
-         "LIMIT, NUM_OPEN, NUM_EXECUTED, NUM_CANCELED) ";
-  sql << "VALUES (";
-  sql << W.quote("DEFAULT") << ", ";
+         "LIMITED, NUM_OPEN, NUM_EXECUTED, NUM_CANCELED, TIME) ";
+  sql << "VALUES (DEFAULT, ";
   sql << W.quote(_account_id) << ", ";
   sql << W.quote(_symbol_name) << ", ";
   sql << W.quote(_limited) << ", ";
   sql << W.quote(_num_open) << ", ";
   sql << W.quote(0) << ", ";
-  sql << W.quote(0) << ");";
+  sql << W.quote(0) << ", ";
+  sql << W.quote(getEpoch()) << ");";
 
   W.exec(sql.str());
   W.commit();
