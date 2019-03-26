@@ -18,42 +18,47 @@ void handleXML(connection * C, int client_fd) {
   // loop and dispatch
   char buffer[BUFFSIZE];
 
-  while (1) {
-    // Reset buffer
-    memset(buffer, '\0', sizeof(buffer));
+  std::string response;
 
-    // Recv
-    int totalsize = recv(client_fd, buffer, BUFFSIZE, 0);
-    if (totalsize < 0)
-      std::cout << "Error receive buffer from client." << std::endl;
+  // Reset buffer
+  memset(buffer, '\0', sizeof(buffer));
 
-    std::string xml(buffer);
+  // Recv
+  int totalsize = recv(client_fd, buffer, BUFFSIZE, 0);
+  if (totalsize < 0)
+    std::cout << "Error receive buffer from client." << std::endl;
 
-    if (DEBUG)
-      std::cout << std::endl
-                << "Buffer received from client: " << std::endl
-                << xml << std::endl
-                << std::endl;
+  std::string xml(buffer);
 
-    // Assume it's correct
-    if (xml.find("<create>") != std::string::npos) {
-      create(C, xml);
-    }
-    else if (xml.find("<transactions>") != std::string::npos) {
-      transactions(C, xml);
-    }
-    else {
-      // Close connection
-      close(client_fd);
-      break;
-    }
+  if (DEBUG)
+    std::cout << std::endl
+              << "Buffer received from client: " << std::endl
+              << xml << std::endl
+              << std::endl;
+
+  // Assume it's correct
+  if (xml.find("<create>") != std::string::npos) {
+    response = create(C, xml);
   }
+  else if (xml.find("<transactions>") != std::string::npos) {
+    response = transactions(C, xml);
+  }
+
+  // Response back
+  int len = send(client_fd, response.c_str(), response.length(), MSG_NOSIGNAL);
+
+  // Close connection
+  close(client_fd);
 }
 
 /*
     Parse create and dispatch different request.
 */
-void create(connection * C, std::string xml) {
+const std::string create(connection * C, std::string xml) {
+  // Response string to return
+  std::stringstream ans;
+  ans << "<results>\n";
+  
   // Parse by line, greedy
   while (1) {
     // Get line by line break's position, xml stands for the remaining content to be parsed
@@ -62,12 +67,14 @@ void create(connection * C, std::string xml) {
       break;
 
     std::string line = xml.substr(0, linebreak);
+    std::string singleResponse = "";
 
     if (line.find("account") != std::string::npos) {
       // Create account: parse one line is enough
       std::string id = getAttribute(line, ID);
       std::string balance = getAttribute(line, BALANCE);
-      createAccount(C, id, balance);
+
+      singleResponse = createAccount(C, id, balance);
 
       // Skip one line
       xml = xml.substr(linebreak + 1);
@@ -81,7 +88,7 @@ void create(connection * C, std::string xml) {
       size_t end = xml.find("</symbol>");  // end before </symbol>, containing line break!
       std::string accounts = xml.substr(start, end - start);
 
-      parseSymbol(C, accounts, symbol);
+      singleResponse = parseSymbol(C, accounts, symbol);
 
       // Skip the entire symbol tag
       xml = xml.substr(end + 10);
@@ -90,7 +97,12 @@ void create(connection * C, std::string xml) {
       // Otherwise skip one line
       xml = xml.substr(linebreak + 1);
     }
+
+    ans << singleResponse;
   }
+
+  ans << "</results>\n";
+  return ans.str();
 }
 
 /*
@@ -129,7 +141,9 @@ const std::string getAttribute(std::string remain, std::string attribute) {
     Parse the entire symbol body:
     Do greedy to find all acounts and number of symbols to be added.
 */
-void parseSymbol(connection * C, std::string accounts, std::string symbol) {
+const std::string parseSymbol(connection * C, std::string accounts, std::string symbol) {
+  std::stringstream ans;
+  
   // Basically access each line and call createSymbol
   while (true) {
     size_t linebreak = accounts.find('\n');
@@ -138,17 +152,23 @@ void parseSymbol(connection * C, std::string accounts, std::string symbol) {
 
     std::string id = getAttribute(accounts, ID);
     std::string amount = getAttribute(accounts, NUM);
-    createSymbol(C, id, symbol, amount);
+    ans << createSymbol(C, id, symbol, amount);
 
     // skip current acount
     accounts = accounts.substr(linebreak + 1);
   }
+
+  return ans.str();
 }
 
 /*
     Parse transactions and dispatch different request.
 */
-void transactions(connection * C, std::string xml) {
+const std::string transactions(connection * C, std::string xml) {
+  // Response string to return
+  std::stringstream ans;
+  ans << "<results>\n";
+
   // Access account ID at first and get all requests
   std::string account_id = getAttribute(xml, ID);
 
@@ -162,6 +182,8 @@ void transactions(connection * C, std::string xml) {
               << requests << std::endl
               << std::endl;
 
+  // Indicate space between each transaction
+  bool space = false;
   // Parse line by line: greedy
   while (1) {
     // Get line by linebreak's position, xml stands for the remaining content to be parsed
@@ -169,7 +191,13 @@ void transactions(connection * C, std::string xml) {
     if (linebreak == std::string::npos)
       break;
 
+    if (space) {
+      ans << "\n";
+    }
+
     std::string line = xml.substr(0, linebreak);
+    std::string singResponse;
+    space = true;
 
     if (line.find("order") != std::string::npos) {
       // Access symbol, amount and limit
@@ -177,24 +205,30 @@ void transactions(connection * C, std::string xml) {
       std::string amount = getAttribute(line, AMOUNT);
       std::string limit = getAttribute(line, LIMIT);
 
-      order(C, account_id, symbol, amount, limit);
+      singResponse = order(C, account_id, symbol, amount, limit);
     }
     else if (line.find("query") != std::string::npos) {
       // Access trans_id
       std::string trans_id = getAttribute(line, ID);
 
-      query(C, account_id, trans_id);
+      singResponse = query(C, account_id, trans_id);
     }
     else if (line.find("cancel") != std::string::npos) {
       // Access trans_id
       std::string trans_id = getAttribute(line, ID);
 
-      query(C, account_id, trans_id);
+      singResponse = cancel(C, account_id, trans_id);
     }
+
+    // Append reponse
+    ans << singResponse;
 
     // Skip one line
     requests = requests.substr(linebreak + 1);
   }
+
+  ans << "</results>\n";
+  return ans.str();
 }
 
 const std::string createAccount(connection * C,
@@ -419,7 +453,7 @@ const std::string order(connection * C,
   // Sell: check if account has enough position as amount
   else {
     int ownedAmount = Position::getSymbolAmount(C, account_id, symbol);
-    int result = ownedAmount - amount;
+    int result = ownedAmount + amount;
 
     if (result >= 0) {  // legal
       Position::setSymbolAmount(C, account_id, symbol, result);
@@ -490,7 +524,7 @@ const std::string cancel(connection * C,
   response << "shares=" << canceledShares << " ";
   response << "time=" << canceledTime << "/>\n";
   response << allExecuted;
-  response << tailer;
+  response << tailer; // Last line
   return response.str();
 }
 

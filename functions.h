@@ -24,11 +24,11 @@ using namespace std::chrono;
 
 void handleXML(connection * C, int client_fd);  // parse
 
-void create(connection * C, std::string xml);  // create account or symbol
+const std::string create(connection * C, std::string xml);  // create account or symbol
 
-void parseSymbol(connection * C, std::string accounts, std::string symbol);
+const std::string parseSymbol(connection * C, std::string accounts, std::string symbol);
 
-void transactions(connection * C, std::string xml);  // deal with transactions
+const std::string transactions(connection * C, std::string xml);  // deal with transactions
 
 const std::string order(connection * C,
                         const std::string & account_id_str,
