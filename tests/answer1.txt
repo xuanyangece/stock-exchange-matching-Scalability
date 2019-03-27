@@ -1,0 +1,22 @@
+<results>
+  <created id="123"/>
+  <error id="123a">Account is not all digits</error>
+  <error id="001">Balance is not a positive decimal number</error>
+  <error id="001">Balance is not a positive decimal number</error>
+  <error id="001">Balance is not a positive decimal number</error>
+  <error id="123">Account already exists</error>
+  <error sym="123adc@" id="123">Symbol is not alphanumeric</error>
+  <error sym="123adc@" id="123">Symbol is not alphanumeric</error>
+  <error sym="Nike" id="123a">Account is not all digits</error>
+  <error sym="Nike" id="123">Amount is not a positive integer</error>
+  <error sym="Nike" id="123">Amount is not a positive integer</error>
+  <error sym="Nike" id="123">Amount is not a positive integer</error>
+  <created sym="Nike" id="123"/>
+  <created sym="Nike" id="123"/>
+  <error sym="Nike" id="456">Account doesn't exist</error>
+  <error sym="Nike" id="777">Account doesn't exist</error>
+  <created id="456"/>
+  <created sym="Adidas" id="456"/>
+  <error sym="Adidas" id="123">Amount is not a positive integer</error>
+  <error id="123">Account already exists</error>
+</results>

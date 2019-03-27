@@ -1,0 +1,28 @@
+<create>
+  <account id="123" balance="9999"/>
+  <account id="123a" balance="1000.00"/>
+  <account id="001" balance="1000a">
+  <account id="001" balance="-1000">
+  <account id="001" balance="0">
+  <account id="123" balance="9999"/>
+  <symbol sym="123adc@">
+    <account id="123">100</account>
+    <account id="123">200</account>
+  </symbol>
+  <symbol sym="Nike">
+    <account id="123a">100</account>
+    <account id="123">0</account>
+    <account id="123">-100</account>
+    <account id="123">100.34</account>
+    <account id="123">100</account>
+    <account id="123">200</account>
+    <account id="456">131</account>
+    <account id="777">90</account>
+  </symbol>
+  <account id="456" balance="7391"/>
+  <symbol sym="Adidas">
+    <account id="456">131</account>
+    <account id="123">-90</account>
+  </symbol>
+  <account id="123" balance="9999"/>
+</create>

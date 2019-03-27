@@ -27,11 +27,12 @@ void handleXML(connection * C, int client_fd) {
 
   std::string xml(buffer);
 
-  if (DEBUG)
+  if (DEBUG) {
     std::cout << std::endl
               << "Buffer received from client: " << std::endl
               << xml << std::endl
               << std::endl;
+  }
 
   // Assume it's correct
   if (xml.find("<create>") != std::string::npos) {
@@ -47,7 +48,6 @@ void handleXML(connection * C, int client_fd) {
   // Close connection
   close(client_fd);
 }
-
 
 const std::string create(connection * C, std::string xml) {
   // Response string to return
@@ -100,7 +100,6 @@ const std::string create(connection * C, std::string xml) {
   return ans.str();
 }
 
-
 const std::string getAttribute(std::string remain, std::string attribute) {
   std::string ans;
 
@@ -129,7 +128,6 @@ const std::string getAttribute(std::string remain, std::string attribute) {
   return ans;
 }
 
-
 const std::string parseSymbol(connection * C, std::string accounts, std::string symbol) {
   std::stringstream ans;
 
@@ -149,7 +147,6 @@ const std::string parseSymbol(connection * C, std::string accounts, std::string 
 
   return ans.str();
 }
-
 
 const std::string transactions(connection * C, std::string xml) {
   // Response string to return
@@ -228,7 +225,7 @@ const std::string createAccount(connection * C,
 
   // Check if balance is double
   if (!isPositiveDouble(balance_str)) {
-    return getCreateAccountError(account_id_str, "Balance is not a decimal number");
+    return getCreateAccountError(account_id_str, "Balance is not a positive decimal number");
   }
 
   double balance;
@@ -236,11 +233,6 @@ const std::string createAccount(connection * C,
   std::stringstream ss;
   ss << balance_str;
   ss >> balance;
-
-  // Check if balance is not negative
-  if (balance < 0) {
-    return getCreateAccountError(account_id_str, "Balance is negative");
-  }
 
   // Check if account already exists
   if (Account::isAccountExists(C, account_id_str)) {
@@ -289,7 +281,7 @@ bool isPositiveDouble(const std::string & str) {
 
   ss >> result;
 
-  return !ss.fail() && ss.eof() && result >= 0;
+  return !ss.fail() && ss.eof() && result > 0;
 }
 
 bool isNonZeroInt(const std::string & str) {
@@ -308,7 +300,7 @@ const std::string getCreateAccountError(const std::string & account_id_str,
   response << "  <error ";
   response << "id=\"" << account_id_str << "\">";
   response << msg;
-  response << "<error>\n";
+  response << "</error>\n";
 
   return response.str();
 }
@@ -368,7 +360,7 @@ const std::string getCreateSymbolError(const std::string & account_id_str,
   response << "sym=\"" << symbol_name << "\" ";
   response << "id=\"" << account_id_str << "\">";
   response << msg;
-  response << "<error>\n";
+  response << "</error>\n";
 
   return response.str();
 }
@@ -553,7 +545,7 @@ const std::string query(connection * C,
   }
 
   // Get cancel shares if it has been canceled
-  if (Transaction::isTransCanceled) {
+  if (Transaction::isTransCanceled(C, trans_id)) {
     int canceledShares = Transaction::getCanceledShares(C, trans_id);
     long canceledTime = Transaction::getCanceledTime(C, trans_id);
 
@@ -580,7 +572,7 @@ const std::string getTransIDError(const std::string & trans_id_str, const std::s
   response << "    <error ";
   response << "trans_id=\"" << trans_id_str << "\">";
   response << msg;
-  response << "<error>\n";
+  response << "</error>\n";
 
   return response.str();
 }
@@ -596,7 +588,7 @@ const std::string getOrderError(const std::string & symbol_name,
   response << "amount=\"" << amount << "\" ";
   response << "limit=\"" << limit << "\">";
   response << msg;
-  response << "<error>\n";
+  response << "</error>\n";
 
   return response.str();
 }

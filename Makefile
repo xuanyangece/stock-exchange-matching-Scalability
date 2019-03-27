@@ -8,7 +8,7 @@ server: server.cpp table.h account.h account.cpp position.h position.cpp transac
 	$(CC) $(CFLAGS) -o server server.cpp account.cpp position.cpp transaction.cpp functions.cpp execution.cpp $(EXTRAFLAGS)
 
 clean:
-	rm -f *~ *.o test
+	rm -f *~ *.o server
 
 clobber:
 	rm -f *~ *.o
