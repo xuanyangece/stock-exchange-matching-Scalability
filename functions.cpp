@@ -11,9 +11,6 @@
 #define AMOUNT "amount"
 #define LIMIT "limit"
 
-/*
-    Receive XML from client and keep connection until invalid format.
-*/
 void handleXML(connection * C, int client_fd) {
   // loop and dispatch
   char buffer[BUFFSIZE];
@@ -51,9 +48,7 @@ void handleXML(connection * C, int client_fd) {
   close(client_fd);
 }
 
-/*
-    Parse create and dispatch different request.
-*/
+
 const std::string create(connection * C, std::string xml) {
   // Response string to return
   std::stringstream ans;
@@ -105,10 +100,7 @@ const std::string create(connection * C, std::string xml) {
   return ans.str();
 }
 
-/*
-    Access attribute from giving string.
-    In our design, it accesses the first one.
-*/
+
 const std::string getAttribute(std::string remain, std::string attribute) {
   std::string ans;
 
@@ -137,10 +129,7 @@ const std::string getAttribute(std::string remain, std::string attribute) {
   return ans;
 }
 
-/*
-    Parse the entire symbol body:
-    Do greedy to find all acounts and number of symbols to be added.
-*/
+
 const std::string parseSymbol(connection * C, std::string accounts, std::string symbol) {
   std::stringstream ans;
 
@@ -161,9 +150,7 @@ const std::string parseSymbol(connection * C, std::string accounts, std::string 
   return ans.str();
 }
 
-/*
-    Parse transactions and dispatch different request.
-*/
+
 const std::string transactions(connection * C, std::string xml) {
   // Response string to return
   std::stringstream ans;
