@@ -4,6 +4,7 @@
 #include <pqxx/pqxx>
 #include <string>
 
+#include "execution.h"
 #include "functions.h"
 #include "table.h"
 
@@ -26,14 +27,14 @@ class Transaction
  public:
   static void createTable(connection * C);
   static void buildForeignKeys(connection * C);
-  static void addTransaction(connection * C,
-                             int _account_id,
-                             const string & _symbol_name,
-                             double _limited,
-                             int _num_open);
+  static int addTransaction(connection * C,
+                            int _account_id,
+                            const string & _symbol_name,
+                            double _limited,
+                            int _num_open);
   // 更新买家的钱，卖家的 amount position
 
-  static void trtMatch();
+  static bool tryMatch(connection * C, int trans_id);
   /*
     获得所有订单并排序
     检测匹配
@@ -48,13 +49,17 @@ class Transaction
 
   static bool isTransCanceled(connection * C, int trans_id);
 
-  static void matchExecution();
-
   // static void queryTransaction();
 
   static void cancelTransaction(connection * C, int trans_id);
 
   static long getCanceledTime(connection * C, int trans_id);
+
+  static int getAccountID(connection * C, int trans_id);
+
+  static double getLimited(connection * C, int trans_id);
+
+  static string getSymbolName(connection * C, int trans_id);
 
   static int getCanceledShares(connection * C, int trans_id);
 

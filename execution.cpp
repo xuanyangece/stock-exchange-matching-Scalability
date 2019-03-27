@@ -21,12 +21,12 @@ void Execution::createTable(connection * C) {
 }
 
 /* Build foreign keys */
-void Account::buildForeignKeys(connection * C) {
+void Execution::buildForeignKeys(connection * C) {
   string buildForeignKeysSql = "ALTER TABLE EXECUTION "
-                               "ADD CONSTRAINT EXECUTION_TRANSACTION_ID_FKEY FOREIGN KEY "
+                               "ADD CONSTRAINT EXECUTION_TRANSACTION_ID_FKEY_1 FOREIGN KEY "
                                "(BUYER_TRANS_ID) REFERENCES TRANSACTION(TRANSACTION_ID); "
                                "ALTER TABLE EXECUTION "
-                               "ADD CONSTRAINT EXECUTION_TRANSACTION_ID_FKEY FOREIGN KEY "
+                               "ADD CONSTRAINT EXECUTION_TRANSACTION_ID_FKEY_2 FOREIGN KEY "
                                "(SELLER_TRANS_ID) REFERENCES TRANSACTION(TRANSACTION_ID);";
 
   Table::buildForeignKeys(C, buildForeignKeysSql);
@@ -44,7 +44,8 @@ void Execution::addExecution(connection * C,
   /* Create SQL statement */
   std::stringstream sql;
   sql << "Insert INTO EXECUTION (EXECUTION_ID, BUYER_TRANS_ID, SELLER_TRANS_ID, ";
-  sql << "AMOUNT, PRICE, TIME) " sql << "VALUES (DEFAULT, ";
+  sql << "AMOUNT, PRICE, TIME) ";
+  sql << "VALUES (DEFAULT, ";
   sql << W.quote(_buyer_trans_id) << ", ";
   sql << W.quote(_seller_trans_id) << ", ";
   sql << W.quote(_amount) << ", ";

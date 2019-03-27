@@ -3,6 +3,7 @@
 #include <pqxx/pqxx>
 
 #include "account.h"
+#include "execution.h"
 #include "functions.h"
 #include "position.h"
 #include "table.h"
@@ -37,10 +38,12 @@ int main(int argc, char * argv[]) {
     Account::createTable(C);
     Position::createTable(C);
     Transaction::createTable(C);
+    Execution::createTable(C);
 
     Account::buildForeignKeys(C);
     Position::buildForeignKeys(C);
     Transaction::buildForeignKeys(C);
+    Execution::buildForeignKeys(C);
   }
   catch (const std::exception & e) {
     cerr << e.what() << std::endl;
@@ -73,7 +76,9 @@ int main(int argc, char * argv[]) {
   std::cout << createSymbol(C, "1001", "baidu", "0");
 
   std::cout << "Epoch: " << getEpoch() << std::endl;
-  Transaction::addTransaction(C, 1001, "baidu", 127.3, 100);
+  std::cout << Transaction::addTransaction(C, 1001, "baidu", 127.3, 100) << std::endl;
+  std::cout << Transaction::addTransaction(C, 1001, "baidu", 127.3, 100) << std::endl;
+  std::cout << Transaction::addTransaction(C, 1001, "baidu", 127.3, 100) << std::endl;
 
   // Close database connection
   C->disconnect();
