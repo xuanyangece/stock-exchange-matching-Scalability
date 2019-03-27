@@ -35,7 +35,7 @@ void Transaction::buildForeignKeys(connection * C) {
 
 /* Add a new entry to the table */
 int Transaction::addTransaction(connection * C,
-                                string account_id,
+                                const string & account_id,
                                 const string & symbol_name,
                                 double limited,
                                 int num_open) {
@@ -47,10 +47,10 @@ int Transaction::addTransaction(connection * C,
   sql << "Insert INTO TRANSACTION (TRANSACTION_ID, ACCOUNT_ID, SYMBOL_NAME, "
          "LIMITED, NUM_OPEN, NUM_CANCELED, OPEN_TIME, CANCEL_TIME) ";
   sql << "VALUES (DEFAULT, ";
-  sql << W.quote(_account_id) << ", ";
-  sql << W.quote(_symbol_name) << ", ";
-  sql << W.quote(_limited) << ", ";
-  sql << W.quote(_num_open) << ", ";
+  sql << W.quote(account_id) << ", ";
+  sql << W.quote(symbol_name) << ", ";
+  sql << W.quote(limited) << ", ";
+  sql << W.quote(num_open) << ", ";
   sql << W.quote(0) << ", ";
   sql << W.quote(getEpoch()) << ", DEFAULT) RETURNING TRANSACTION_ID;";
 
@@ -150,7 +150,7 @@ int Transaction::getOpenShares(connection * C, int trans_id) {
   return R[0][0].as<int>();
 }
 
-int Transaction::getAccountID(connection * C, int trans_id) {
+string Transaction::getAccountID(connection * C, int trans_id) {
   /* Create a non-transactional object. */
   nontransaction N(*C);
 
@@ -162,7 +162,7 @@ int Transaction::getAccountID(connection * C, int trans_id) {
   /* Execute SQL query */
   result R(N.exec(sql.str()));
 
-  return R[0][0].as<int>();
+  return R[0][0].as<string>();
 }
 
 double Transaction::getLimited(connection * C, int trans_id) {
@@ -234,7 +234,7 @@ void Transaction::cancelTransaction(connection * C, int trans_id) {
   Transaction::setCanceledShares(C, trans_id, num_open);
   Transaction::setCanceledTime(C, trans_id, getEpoch());
 
-  int account_id = Transaction::getAccountID(C, trans_id);
+  string account_id = Transaction::getAccountID(C, trans_id);
 
   bool isBuyer = (num_open > 0);
 
@@ -309,31 +309,28 @@ bool Transaction::tryMatch(connection * C, int trans_id) {
 
   result R(N.exec(getinfo.str()));
 
-  int _account_id = R[0]["ACCOUNT_ID"].as<int>();
-  string _symbol_name = R[0]["SYMBOL_NAME"].as<string>();
-  double _limited = R[0]["LIMITED"].as<double>();
-  int _num_open = R[0]["NUM_OPEN"].as<int>();
-  // int _num_canceled = R[0]["NUM_CANCELED"].as<int>();
-  // long _open_time = R[0]["OPEN_TIME"].as<long>();
-  // long _cancel_time = R[0]["CANCEL_TIME"].as<long>();
+  string account_id = R[0]["ACCOUNT_ID"].as<string>();
+  string symbol_name = R[0]["SYMBOL_NAME"].as<string>();
+  double limited = R[0]["LIMITED"].as<double>();
+  int num_open = R[0]["NUM_OPEN"].as<int>();
 
   /* Create SQL statement */
   std::stringstream getTrans;
   getTrans << "SELECT * FROM TRANSACTION WHERE ACCOUNT_ID!=";
-  getTrans << N.quote(_account_id) << " ";
-  getTrans << "AND SYMBOL_NAME=" << N.quote(_symbol_name) << " ";
+  getTrans << N.quote(account_id) << " ";
+  getTrans << "AND SYMBOL_NAME=" << N.quote(symbol_name) << " ";
 
-  bool isBuyer = (_num_open > 0);
+  bool isBuyer = (num_open > 0);
   int final_amount;
   double final_price;
 
   if (isBuyer) {
-    getTrans << "AND LIMITED<=" << N.quote(_limited) << " ";
+    getTrans << "AND LIMITED<=" << N.quote(limited) << " ";
     getTrans << "AND NUM_OPEN<0 ";
     getTrans << "ORDER BY LIMITED ASC, OPEN_TIME ASC LIMIT 1;";
   }
   else {
-    getTrans << "AND LIMITED>=" << N.quote(_limited) << " ";
+    getTrans << "AND LIMITED>=" << N.quote(limited) << " ";
     getTrans << "AND NUM_OPEN>0 ";
     getTrans << "ORDER BY LIMITED DESC, OPEN_TIME ASC LIMIT 1;";
   }
@@ -342,20 +339,17 @@ bool Transaction::tryMatch(connection * C, int trans_id) {
   result rst(N.exec(getTrans.str()));
 
   int other_trans_id = rst[0]["TRANSACTION_ID"].as<int>();
-  int other_account_id = rst[0]["ACCOUNT_ID"].as<int>();
+  string other_account_id = rst[0]["ACCOUNT_ID"].as<string>();
   string other_symbol_name = rst[0]["SYMBOL_NAME"].as<string>();
   double other_limited = rst[0]["LIMITED"].as<double>();
   int other_num_open = rst[0]["NUM_OPEN"].as<int>();
-  // int other_num_canceled = rst[0]["NUM_CANCELED"].as<int>();
-  // long other_open_time = rst[0]["OPEN_TIME"].as<long>();
-  // long other_cancel_time = rst[0]["CANCEL_TIME"].as<long>();
 
   // Get final price
   final_price = other_limited;
 
-  if (isBuyer) {                         // _num_open: 100
-    if (_num_open <= -other_num_open) {  // other_num_open: -150, completed matching
-      final_amount = _num_open;          // 100
+  if (isBuyer) {                        // _num_open: 100
+    if (num_open <= -other_num_open) {  // other_num_open: -150, completed matching
+      final_amount = num_open;          // 100
       // Update symbol amount
       Transaction::setOpenShares(C, trans_id, 0);
       Transaction::setOpenShares(C, other_trans_id, other_num_open + final_amount);  // -50
@@ -363,24 +357,24 @@ bool Transaction::tryMatch(connection * C, int trans_id) {
     else {                             // other_num_open: -30, partial matchin
       final_amount = -other_num_open;  // 30
                                        // Update symbol amount
-      Transaction::setOpenShares(C, trans_id, _num_open - final_amount);  // 70
+      Transaction::setOpenShares(C, trans_id, num_open - final_amount);  // 70
       Transaction::setOpenShares(C, other_trans_id, 0);
     }
     // Return money to buyer
-    double oldBalance = Account::getBalance(C, _account_id);
-    Account::setBalance(C, _account_id, oldBalance + final_amount * (_limited - other_limited));
+    double oldBalance = Account::getBalance(C, account_id);
+    Account::setBalance(C, account_id, oldBalance + final_amount * (limited - other_limited));
     // Give symbol to buyer
-    int oldNum = Position::getSymbolAmount(C, _account_id, _symbol_name);
-    Position::setSymbolAmount(C, _account_id, _symbol_name, oldNum + final_amount);
+    int oldNum = Position::getSymbolAmount(C, account_id, symbol_name);
+    Position::setSymbolAmount(C, account_id, symbol_name, oldNum + final_amount);
     // Give money to seller
     oldBalance = Account::getBalance(C, other_account_id);
     Account::setBalance(C, other_account_id, oldBalance + final_amount * final_price);
     // Create execution
     Execution::addExecution(C, trans_id, other_trans_id, final_amount, final_price);
   }
-  else {                                 // _num_open: -100
-    if (-_num_open <= other_num_open) {  // other_num_open: 150, completed matching
-      final_amount = -_num_open;         // 100
+  else {                                // _num_open: -100
+    if (-num_open <= other_num_open) {  // other_num_open: 150, completed matching
+      final_amount = -num_open;         // 100
       // Update symbol amount
       Transaction::setOpenShares(C, trans_id, 0);
       Transaction::setOpenShares(C, other_trans_id, other_num_open - final_amount);  // 50
@@ -388,16 +382,16 @@ bool Transaction::tryMatch(connection * C, int trans_id) {
     else {                            // other_num_open: 30, partial matchin
       final_amount = other_num_open;  // 30
                                       // Update symbol amount
-      Transaction::setOpenShares(C, trans_id, -_num_open - final_amount);  // 70
+      Transaction::setOpenShares(C, trans_id, -num_open - final_amount);  // 70
       Transaction::setOpenShares(C, other_trans_id, 0);
     }
     // Return money to buyer: nothing
     // Give symbol to buyer
-    int oldNum = Position::getSymbolAmount(C, other_account_id, _symbol_name);
-    Position::setSymbolAmount(C, other_account_id, _symbol_name, oldNum + final_amount);
+    int oldNum = Position::getSymbolAmount(C, other_account_id, symbol_name);
+    Position::setSymbolAmount(C, other_account_id, symbol_name, oldNum + final_amount);
     // Give money to seller
-    double oldBalance = Account::getBalance(C, _account_id);
-    Account::setBalance(C, _account_id, oldBalance + final_amount * final_price);
+    double oldBalance = Account::getBalance(C, account_id);
+    Account::setBalance(C, account_id, oldBalance + final_amount * final_price);
     // Create execution
     Execution::addExecution(C, other_trans_id, trans_id, final_amount, final_price);
   }

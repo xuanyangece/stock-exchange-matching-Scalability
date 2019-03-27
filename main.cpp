@@ -64,21 +64,21 @@ int main(int argc, char * argv[]) {
   std::cout << createAccount(C, "1001", "1000");
 
   std::cout << createSymbol(C, "1001", "tengxun", "100");
-  std::cout << Position::getSymbolAmount(C, 1001, "tengxun") << endl;
+  std::cout << Position::getSymbolAmount(C, "1001", "tengxun") << endl;
 
   std::cout << createSymbol(C, "1001", "baidu", "50");
-  std::cout << Position::getSymbolAmount(C, 1001, "baidu") << endl;
+  std::cout << Position::getSymbolAmount(C, "1001", "baidu") << endl;
   std::cout << createSymbol(C, "1001", "baidu", "50");
-  std::cout << Position::getSymbolAmount(C, 1001, "baidu") << endl;
+  std::cout << Position::getSymbolAmount(C, "1001", "baidu") << endl;
   std::cout << createSymbol(C, "1008", "baidu", "100");
   std::cout << createSymbol(C, "1001", "baidu", "-10");
   std::cout << createSymbol(C, "1001", "baidu0_", "50");
   std::cout << createSymbol(C, "1001", "baidu", "0");
 
   std::cout << "Epoch: " << getEpoch() << std::endl;
-  std::cout << Transaction::addTransaction(C, 1001, "baidu", 127.3, 100) << std::endl;
-  std::cout << Transaction::addTransaction(C, 1001, "baidu", 127.3, 100) << std::endl;
-  std::cout << Transaction::addTransaction(C, 1001, "baidu", 127.3, 100) << std::endl;
+  std::cout << Transaction::addTransaction(C, "1001", "baidu", 127.3, 100) << std::endl;
+  std::cout << Transaction::addTransaction(C, "1001", "baidu", 127.3, 100) << std::endl;
+  std::cout << Transaction::addTransaction(C, "1001", "baidu", 127.3, 100) << std::endl;
 
   // Close database connection
   C->disconnect();

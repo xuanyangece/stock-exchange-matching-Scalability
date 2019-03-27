@@ -13,12 +13,12 @@ using namespace pqxx;
 class Execution
 {
  private:
-  int execution_id;
-  int buyer_trans_id;
-  int seller_trans_id;
-  int amount;
-  double price;
-  long time;
+  // int execution_id;
+  // int buyer_trans_id;
+  // int seller_trans_id;
+  // int amount;
+  // double price;
+  // long time;
 
  public:
   static void createTable(connection * C);
@@ -26,10 +26,10 @@ class Execution
   static void buildForeignKeys(connection * C);
 
   static void addExecution(connection * C,
-                           int _buyer_trans_id,
-                           int _seller_trans_id,
-                           int _amount,
-                           double _price);
+                           int buyer_trans_id,
+                           int seller_trans_id,
+                           int amount,
+                           double price);
 };
 
 #endif

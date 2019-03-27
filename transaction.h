@@ -14,21 +14,21 @@ using namespace pqxx;
 class Transaction
 {
  private:
-  int transaction_id;
-  int account_id;
-  string symbol_name;
-  double limited;
-  int num_open;
+  // int transaction_id;
+  // string account_id;
+  // string symbol_name;
+  // double limited;
+  // int num_open;
   // int num_executed;
-  int num_canceled;
-  long open_time;
-  long cancel_time;
+  // int num_canceled;
+  // long open_time;
+  // long cancel_time;
 
  public:
   static void createTable(connection * C);
   static void buildForeignKeys(connection * C);
   static int addTransaction(connection * C,
-                            string account_id,
+                            const string & account_id,
                             const string & symbol_name,
                             double limited,
                             int num_open);
@@ -41,13 +41,11 @@ class Transaction
 
   static bool isTransCanceled(connection * C, int trans_id);
 
-  // static void queryTransaction();
-
   static void cancelTransaction(connection * C, int trans_id);
 
   static long getCanceledTime(connection * C, int trans_id);
 
-  static int getAccountID(connection * C, int trans_id);
+  static string getAccountID(connection * C, int trans_id);
 
   static double getLimited(connection * C, int trans_id);
 

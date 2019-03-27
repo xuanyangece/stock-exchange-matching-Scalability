@@ -12,7 +12,7 @@ void Position::createTable(connection * C) {
   string createTableSql = "CREATE TABLE POSITION ("
                           "POSITION_ID     SERIAL  PRIMARY KEY NOT NULL, "
                           "SYMBOL_NAME     TEXT    NOT NULL, "
-                          "ACCOUNT_ID      INT     NOT NULL, "
+                          "ACCOUNT_ID      TEXT    NOT NULL, "
                           "NUM_SHARE       INT     NOT NULL);";
 
   Table::createTable(C, dropExistingTableSql, createTableSql);
@@ -29,9 +29,9 @@ void Position::buildForeignKeys(connection * C) {
 
 /* Add a new entry to the table */
 void Position::addPosition(connection * C,
-                           const string & _symbol_name,
-                           int _account_id,
-                           int _num_share) {
+                           const string & symbol_name,
+                           const string & account_id,
+                           int num_share) {
   /* Create a transactional object. */
   work W(*C);
 
@@ -39,23 +39,25 @@ void Position::addPosition(connection * C,
   std::stringstream sql;
   sql << "Insert INTO POSITION (POSITION_ID, SYMBOL_NAME, ACCOUNT_ID, NUM_SHARE) ";
   sql << "VALUES ( DEFAULT, ";
-  sql << W.quote(_symbol_name) << ", ";
-  sql << W.quote(_account_id) << ", ";
-  sql << W.quote(_num_share) << ");";
+  sql << W.quote(symbol_name) << ", ";
+  sql << W.quote(account_id) << ", ";
+  sql << W.quote(num_share) << ");";
 
   W.exec(sql.str());
   W.commit();
 }
 
-bool Position::isSymbolExists(connection * C, int _account_id, const string & _symbol_name) {
+bool Position::isSymbolExists(connection * C,
+                              const string & account_id,
+                              const string & symbol_name) {
   /* Create a non-transactional object. */
   nontransaction N(*C);
 
   /* Create SQL statement */
   std::stringstream sql;
   sql << "SELECT * FROM POSITION WHERE ACCOUNT_ID=";
-  sql << N.quote(_account_id) << " ";
-  sql << "AND symbol_name=" << N.quote(_symbol_name) << ";";
+  sql << N.quote(account_id) << " ";
+  sql << "AND symbol_name=" << N.quote(symbol_name) << ";";
 
   /* Execute SQL query */
   result R(N.exec(sql.str()));
@@ -63,15 +65,17 @@ bool Position::isSymbolExists(connection * C, int _account_id, const string & _s
   return R.size() != 0;
 }
 
-int Position::getSymbolAmount(connection * C, int _account_id, const string & _symbol_name) {
+int Position::getSymbolAmount(connection * C,
+                              const string & account_id,
+                              const string & symbol_name) {
   /* Create a non-transactional object. */
   nontransaction N(*C);
 
   /* Create SQL statement */
   std::stringstream sql;
   sql << "SELECT NUM_SHARE FROM POSITION WHERE ACCOUNT_ID=";
-  sql << N.quote(_account_id) << " ";
-  sql << "AND SYMBOL_NAME=" << N.quote(_symbol_name) << ";";
+  sql << N.quote(account_id) << " ";
+  sql << "AND SYMBOL_NAME=" << N.quote(symbol_name) << ";";
 
   /* Execute SQL query */
   result R(N.exec(sql.str()));
@@ -80,8 +84,8 @@ int Position::getSymbolAmount(connection * C, int _account_id, const string & _s
 }
 
 void Position::setSymbolAmount(connection * C,
-                               int _account_id,
-                               const string & _symbol_name,
+                               const string & account_id,
+                               const string & symbol_name,
                                int amount) {
   /* Create a non-transactional object. */
   work W(*C);
@@ -91,8 +95,8 @@ void Position::setSymbolAmount(connection * C,
   sql << "UPDATE POSITION SET NUM_SHARE=";
   sql << W.quote(amount) << " ";
   sql << "WHERE ACCOUNT_ID=";
-  sql << W.quote(_account_id) << " ";
-  sql << "AND SYMBOL_NAME=" << W.quote(_symbol_name) << ";";
+  sql << W.quote(account_id) << " ";
+  sql << "AND SYMBOL_NAME=" << W.quote(symbol_name) << ";";
 
   /* Execute SQL query */
   W.exec(sql.str());

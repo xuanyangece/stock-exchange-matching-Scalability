@@ -34,10 +34,10 @@ void Execution::buildForeignKeys(connection * C) {
 
 /* Add a new entry to the table */
 void Execution::addExecution(connection * C,
-                             int _buyer_trans_id,
-                             int _seller_trans_id,
-                             int _amount,
-                             double _price) {
+                             int buyer_trans_id,
+                             int seller_trans_id,
+                             int amount,
+                             double price) {
   /* Create a transactional object. */
   work W(*C);
 
@@ -46,10 +46,10 @@ void Execution::addExecution(connection * C,
   sql << "Insert INTO EXECUTION (EXECUTION_ID, BUYER_TRANS_ID, SELLER_TRANS_ID, ";
   sql << "AMOUNT, PRICE, TIME) ";
   sql << "VALUES (DEFAULT, ";
-  sql << W.quote(_buyer_trans_id) << ", ";
-  sql << W.quote(_seller_trans_id) << ", ";
-  sql << W.quote(_amount) << ", ";
-  sql << W.quote(_price) << ", ";
+  sql << W.quote(buyer_trans_id) << ", ";
+  sql << W.quote(seller_trans_id) << ", ";
+  sql << W.quote(amount) << ", ";
+  sql << W.quote(price) << ", ";
   sql << W.quote(getEpoch()) << ");";
 
   W.exec(sql.str());

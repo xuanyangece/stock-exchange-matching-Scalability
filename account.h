@@ -20,13 +20,13 @@ class Account
 
   static void buildForeignKeys(connection * C);
 
-  static void addAccount(connection * C, string account_id, double balance);
+  static void addAccount(connection * C, const string & account_id, double balance);
 
-  static bool isAccountExists(connection * C, string account_id);
+  static bool isAccountExists(connection * C, const string & account_id);
 
-  static double getBalance(connection * C, string account_id);
+  static double getBalance(connection * C, const string & account_id);
 
-  static void setBalance(connection * C, string account_id, double balance);
+  static void setBalance(connection * C, const string & account_id, double balance);
 };
 
 #endif

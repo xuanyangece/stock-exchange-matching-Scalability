@@ -10,7 +10,7 @@ void Account::createTable(connection * C) {
   string dropExistingTableSql = "DROP TABLE IF EXISTS ACCOUNT CASCADE;";
 
   string createTableSql = "CREATE TABLE ACCOUNT ("
-                          "ACCOUNT_ID      INT     PRIMARY KEY NOT NULL, "
+                          "ACCOUNT_ID      TEXT    PRIMARY KEY NOT NULL, "
                           "BALANCE         REAL    NOT NULL);";
 
   Table::createTable(C, dropExistingTableSql, createTableSql);
@@ -23,7 +23,7 @@ void Account::buildForeignKeys(connection * C) {
 }
 
 /* Add a new entry to the table */
-void Account::addAccount(connection * C, int _account_id, double _balance) {
+void Account::addAccount(connection * C, const string & account_id, double balance) {
   /* Create a transactional object. */
   work W(*C);
 
@@ -31,22 +31,22 @@ void Account::addAccount(connection * C, int _account_id, double _balance) {
   std::stringstream sql;
   sql << "Insert INTO ACCOUNT (ACCOUNT_ID, BALANCE) ";
   sql << "VALUES (";
-  sql << W.quote(_account_id) << ", ";
-  sql << W.quote(_balance) << ");";
+  sql << W.quote(account_id) << ", ";
+  sql << W.quote(balance) << ");";
 
   W.exec(sql.str());
   W.commit();
 }
 
 /* Check if the given account already exists */
-bool Account::isAccountExists(connection * C, int _account_id) {
+bool Account::isAccountExists(connection * C, const string & account_id) {
   /* Create a non-transactional object. */
   nontransaction N(*C);
 
   /* Create SQL statement */
   std::stringstream sql;
   sql << "SELECT * FROM ACCOUNT WHERE ACCOUNT_ID=";
-  sql << N.quote(_account_id) << ";";
+  sql << N.quote(account_id) << ";";
 
   /* Execute SQL query */
   result R(N.exec(sql.str()));
@@ -54,14 +54,14 @@ bool Account::isAccountExists(connection * C, int _account_id) {
   return R.size() != 0;
 }
 
-double Account::getBalance(connection * C, int _account_id) {
+double Account::getBalance(connection * C, const string & account_id) {
   /* Create a non-transactional object. */
   nontransaction N(*C);
 
   /* Create SQL statement */
   std::stringstream sql;
   sql << "SELECT BALANCE FROM ACCOUNT WHERE ACCOUNT_ID=";
-  sql << N.quote(_account_id) << ";";
+  sql << N.quote(account_id) << ";";
 
   /* Execute SQL query */
   result R(N.exec(sql.str()));
@@ -69,16 +69,16 @@ double Account::getBalance(connection * C, int _account_id) {
   return R[0][0].as<double>();
 }
 
-void Account::setBalance(connection * C, int _account_id, double _balance) {
+void Account::setBalance(connection * C, const string & account_id, double balance) {
   /* Create a non-transactional object. */
   work W(*C);
 
   /* Create SQL statement */
   std::stringstream sql;
   sql << "UPDATE ACCOUNT SET BALANCE=";
-  sql << W.quote(_balance) << " ";
+  sql << W.quote(balance) << " ";
   sql << "WHERE ACCOUNT_ID=";
-  sql << W.quote(_account_id) << ";";
+  sql << W.quote(account_id) << ";";
 
   /* Execute SQL query */
   W.exec(sql.str());

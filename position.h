@@ -12,10 +12,10 @@ using namespace pqxx;
 class Position
 {
  private:
-  int position_id;
-  string symbol_name;
-  int account_id;
-  int num_share;
+  // int position_id;
+  // string symbol_name;
+  // string account_id;
+  // int num_share;
 
  public:
   static void createTable(connection * C);
@@ -23,17 +23,17 @@ class Position
   static void buildForeignKeys(connection * C);
 
   static void addPosition(connection * C,
-                          const string & _symbol_name,
-                          int _account_id,
-                          int _num_share);
+                          const string & symbol_name,
+                          const string & account_id,
+                          int num_share);
 
-  static bool isSymbolExists(connection * C, int _account_id, const string & _symbol_name);
+  static bool isSymbolExists(connection * C, const string & account_id, const string & symbol_name);
 
-  static int getSymbolAmount(connection * C, int _account_id, const string & _symbol_name);
+  static int getSymbolAmount(connection * C, const string & account_id, const string & symbol_name);
 
   static void setSymbolAmount(connection * C,
-                              int _account_id,
-                              const string & _symbol_name,
+                              const string & account_id,
+                              const string & symbol_name,
                               int amount);
 };
 
