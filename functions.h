@@ -6,6 +6,7 @@
 #include <sys/select.h>
 #include <unistd.h>
 
+#include <chrono>
 #include <cstring>
 #include <exception>
 #include <iostream>
@@ -13,7 +14,6 @@
 #include <pqxx/pqxx>
 #include <string>
 #include <thread>
-#include <chrono>
 
 #include "account.h"
 #include "position.h"
@@ -54,7 +54,7 @@ bool isDigits(const std::string & str);
 
 bool isAlphaDigits(const std::string & str);
 
-bool isDouble(const std::string & str);
+bool isPositiveDouble(const std::string & str);
 
 bool isNonZeroInt(const std::string & str);
 
@@ -70,14 +70,12 @@ const std::string getCreateSymbolError(const std::string & account_id_str,
                                        const std::string & symbol_name,
                                        const std::string & msg);
 
-const std::string getOrderError(const std::string & symbol_name, 
-                                        const std::string & amount, 
-                                        const std::string & limit,
-                                        const std::string & msg);
+const std::string getOrderError(const std::string & symbol_name,
+                                const std::string & amount,
+                                const std::string & limit,
+                                const std::string & msg);
 
-const std::string getTransIDError(const std::string & trans_id_str, 
-                                        const std::string & msg);
-
+const std::string getTransIDError(const std::string & trans_id_str, const std::string & msg);
 
 long getEpoch();
 

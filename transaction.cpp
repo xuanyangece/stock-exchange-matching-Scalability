@@ -13,7 +13,7 @@ void Transaction::createTable(connection * C) {
 
   string createTableSql = "CREATE TABLE TRANSACTION ("
                           "TRANSACTION_ID  SERIAL  PRIMARY KEY NOT NULL, "
-                          "ACCOUNT_ID      INT     NOT NULL, "
+                          "ACCOUNT_ID      TEXT    NOT NULL, "
                           "SYMBOL_NAME     TEXT    NOT NULL, "
                           "LIMITED         REAL    NOT NULL, "
                           "NUM_OPEN        INT     NOT NULL, "
@@ -35,10 +35,10 @@ void Transaction::buildForeignKeys(connection * C) {
 
 /* Add a new entry to the table */
 int Transaction::addTransaction(connection * C,
-                                int _account_id,
-                                const string & _symbol_name,
-                                double _limited,
-                                int _num_open) {
+                                string account_id,
+                                const string & symbol_name,
+                                double limited,
+                                int num_open) {
   /* Create a transactional object. */
   work W(*C);
 

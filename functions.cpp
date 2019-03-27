@@ -58,7 +58,7 @@ const std::string create(connection * C, std::string xml) {
   // Response string to return
   std::stringstream ans;
   ans << "<results>\n";
-  
+
   // Parse by line, greedy
   while (1) {
     // Get line by line break's position, xml stands for the remaining content to be parsed
@@ -143,7 +143,7 @@ const std::string getAttribute(std::string remain, std::string attribute) {
 */
 const std::string parseSymbol(connection * C, std::string accounts, std::string symbol) {
   std::stringstream ans;
-  
+
   // Basically access each line and call createSymbol
   while (true) {
     size_t linebreak = accounts.find('\n');
@@ -392,7 +392,7 @@ const std::string order(connection * C,
                         const std::string & amount_str,
                         const std::string & limit_str) {
   // Step 1: Check format
-  // account_id(digits) 
+  // account_id(digits)
   // symbol(AlphaDigits)
   // amount(integer-nonzero)
   // limit(double)
@@ -415,7 +415,7 @@ const std::string order(connection * C,
   // Check if limit is positive double
   if (!isPositiveDouble(limit_str)) {
     return getOrderError(symbol, amount_str, limit_str, "Limit is not double");
-  } 
+  }
 
   // Step 2: DB validation
   // account existence
@@ -444,7 +444,8 @@ const std::string order(connection * C,
       Account::setBalance(C, account_id_str, result);
     }
     else {  // illegal
-      return getOrderError(symbol, amount_str, limit_str, "Account doesn't have enough balance to buy");
+      return getOrderError(
+          symbol, amount_str, limit_str, "Account doesn't have enough balance to buy");
     }
   }
   // Sell: check if account has enough position as amount
@@ -456,7 +457,8 @@ const std::string order(connection * C,
       Position::setSymbolAmount(C, account_id_str, symbol, result);
     }
     else {  // illegal
-      return getOrderError(symbol, amount_str, limit_str, "Account doesn't have enough symbol to sell");
+      return getOrderError(
+          symbol, amount_str, limit_str, "Account doesn't have enough symbol to sell");
     }
   }
 
@@ -464,7 +466,8 @@ const std::string order(connection * C,
   int trans_id = Transaction::addTransaction(C, account_id_str, symbol, amount);
 
   // Step 4: Match one possible at a time
-  while (Transaction::trtMatch(C, trans_id)) {}
+  while (Transaction::tryMatch(C, trans_id)) {
+  }
 
   // Response will will not affected by match result
   std::stringstream response;
@@ -480,7 +483,7 @@ const std::string cancel(connection * C,
                          const std::string & trans_id_str) {
   const std::string header = "  <canceled id=\"" + trans_id_str + "\">\n";
   const std::string tailer = "  </canceled>\n";
-  
+
   // Check if account is all digits
   if (!isDigits(account_id_str)) {
     return getCreateAccountError(account_id_str, "Account is not all digits");
@@ -515,12 +518,12 @@ const std::string cancel(connection * C,
   std::string allExecuted = Transaction::queryExecuted(C, trans_id);
 
   std::stringstream response;
-  response << header;   // First line
+  response << header;  // First line
   response << "    <canceled ";
   response << "shares=" << canceledShares << " ";
   response << "time=" << canceledTime << "/>\n";
   response << allExecuted;
-  response << tailer; // Last line
+  response << tailer;  // Last line
   return response.str();
 }
 
@@ -529,7 +532,7 @@ const std::string query(connection * C,
                         const std::string & trans_id_str) {
   const std::string header = "  <status id=\"" + trans_id_str + "\">\n";
   const std::string tailer = "  </status>\n";
-  
+
   // Check if account is all digits
   if (!isDigits(account_id_str)) {
     return header + getCreateAccountError(account_id_str, "Account is not all digits") + tailer;
@@ -566,7 +569,7 @@ const std::string query(connection * C,
   if (Transaction::isTransCanceled) {
     int canceledShares = Transaction::getCanceledShares(C, trans_id);
     long canceledTime = Transaction::getCanceledTime(C, trans_id);
-    
+
     canceledResponse << "    <canceled ";
     canceledResponse << "shares=" << canceledShares << " ";
     canceledResponse << "time=" << canceledTime << "/>\n";
@@ -576,11 +579,11 @@ const std::string query(connection * C,
   executedResponse << Transaction::queryExecuted(C, trans_id);
 
   std::stringstream response;
-  response << header;    // First line
+  response << header;  // First line
   response << openSharesResponse.str();
   response << canceledResponse.str();
   response << executedResponse.str();
-  response << tailer;     // Last line
+  response << tailer;  // Last line
   return response.str();
 }
 
@@ -595,10 +598,10 @@ const std::string getTransIDError(const std::string & trans_id_str, const std::s
   return response.str();
 }
 
-const std::string getOrderError(const std::string & symbol_name, 
-                                        const std::string & amount, 
-                                        const std::string & limit,
-                                        const std::string & msg) {
+const std::string getOrderError(const std::string & symbol_name,
+                                const std::string & amount,
+                                const std::string & limit,
+                                const std::string & msg) {
   std::stringstream response;
 
   response << "  <error ";

@@ -12,21 +12,21 @@ using namespace pqxx;
 class Account
 {
  private:
-  int account_id;
-  double balance;
+  // string account_id;
+  // double balance;
 
  public:
   static void createTable(connection * C);
 
   static void buildForeignKeys(connection * C);
 
-  static void addAccount(connection * C, int _account_id, double _balance);
+  static void addAccount(connection * C, string account_id, double balance);
 
-  static bool isAccountExists(connection * C, int _account_id);
+  static bool isAccountExists(connection * C, string account_id);
 
-  static double getBalance(connection * C, int _account_id);
+  static double getBalance(connection * C, string account_id);
 
-  static void setBalance(connection * C, int _account_id, double _balance);
+  static void setBalance(connection * C, string account_id, double balance);
 };
 
 #endif
