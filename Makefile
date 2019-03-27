@@ -1,11 +1,11 @@
 CC=g++
 CFLAGS=-O3
-EXTRAFLAGS=-lpqxx -lpq
+EXTRAFLAGS=-lpqxx -lpq -pthread
 
-all: test
+all: server
 
-test: main.cpp table.h account.h account.cpp position.h position.cpp transaction.h transaction.cpp functions.h functions.cpp execution.h execution.cpp
-	$(CC) $(CFLAGS) -o test main.cpp account.cpp position.cpp transaction.cpp functions.cpp execution.cpp $(EXTRAFLAGS)
+server: server.cpp table.h account.h account.cpp position.h position.cpp transaction.h transaction.cpp functions.h functions.cpp execution.h execution.cpp
+	$(CC) $(CFLAGS) -o server server.cpp account.cpp position.cpp transaction.cpp functions.cpp execution.cpp $(EXTRAFLAGS)
 
 clean:
 	rm -f *~ *.o test

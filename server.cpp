@@ -1,4 +1,13 @@
+#include <fstream>
+#include <iostream>
+#include <pqxx/pqxx>
+
+#include "account.h"
+#include "execution.h"
 #include "functions.h"
+#include "position.h"
+#include "table.h"
+#include "transaction.h"
 
 #define DEVELOPMENT 1  // Development or production
 #define PORT "12345"   // Default port 12345 as required
@@ -53,7 +62,47 @@ int main(int argc, char ** argv) {
 
   /*
         Set up and initialize DB here 
-    */
+   */
+  // Allocate & initialize a Postgres connection object
+  connection * C;
+
+  try {
+    // Establish a connection to the database
+    // Parameters: database name, user name, user password
+    C = new connection("dbname=MARKET_XUAN_KAI user=postgres password=passw0rd");
+    if (C->is_open()) {
+      // cout << "Opened database successfully: " << C->dbname() << endl;
+    }
+    else {
+      std::cout << "Can't open database" << std::endl;
+      return 1;
+    }
+  }
+  catch (const std::exception & e) {
+    std::cerr << e.what() << std::endl;
+    return 1;
+  }
+
+  try {
+    /* Drop existing tables and create new tables */
+    Account::createTable(C);
+    Position::createTable(C);
+    Transaction::createTable(C);
+    Execution::createTable(C);
+
+    Account::buildForeignKeys(C);
+    Position::buildForeignKeys(C);
+    Transaction::buildForeignKeys(C);
+    Execution::buildForeignKeys(C);
+  }
+  catch (const std::exception & e) {
+    std::cerr << e.what() << std::endl;
+    return 1;
+  }
+
+  if (DEVELOPMENT) {
+    std::cout << "Server starts running..." << std::endl;
+  }
 
   while (1) {
     // Get address info
@@ -68,7 +117,7 @@ int main(int argc, char ** argv) {
     }
 
     try {
-      std::thread mythread(handleXML, reqfd);
+      std::thread mythread(handleXML, C, reqfd);
       mythread.detach();
     }
     catch (std::exception & e) {
@@ -81,5 +130,9 @@ int main(int argc, char ** argv) {
 
   freeaddrinfo(host_info_list);
   close(sockfd);
+  // Close database connection
+  C->disconnect();
+  delete C;
+
   return 0;
 }
