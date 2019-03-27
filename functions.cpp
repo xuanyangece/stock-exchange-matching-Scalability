@@ -244,12 +244,11 @@ const std::string createAccount(connection * C,
     return getCreateAccountError(account_id_str, "Balance is not a decimal number");
   }
 
-  int account_id;
   double balance;
 
   std::stringstream ss;
-  ss << account_id_str << " " << balance_str;
-  ss >> account_id >> balance;
+  ss << balance_str;
+  ss >> balance;
 
   // Check if balance is not negative
   if (balance < 0) {
@@ -257,12 +256,12 @@ const std::string createAccount(connection * C,
   }
 
   // Check if account already exists
-  if (Account::isAccountExists(C, account_id)) {
+  if (Account::isAccountExists(C, account_id_str)) {
     return getCreateAccountError(account_id_str, "Account already exists");
   }
 
   // Account not exists, create it
-  Account::addAccount(C, account_id, balance);
+  Account::addAccount(C, account_id_str, balance);
 
   std::stringstream response;
   response << "  <created id=\"" << account_id_str << "\"/>\n";
@@ -346,25 +345,24 @@ const std::string createSymbol(connection * C,
     return getCreateSymbolError(account_id_str, symbol_name, "Amount is not a positive integer");
   }
 
-  int account_id;
   int num_share;
 
   std::stringstream ss;
-  ss << account_id_str << " " << num_share_str;
-  ss >> account_id >> num_share;
+  ss << num_share_str;
+  ss >> num_share;
 
   // Check if account already exists
-  if (!Account::isAccountExists(C, account_id)) {
+  if (!Account::isAccountExists(C, account_id_str)) {
     return getCreateSymbolError(account_id_str, symbol_name, "Account doesn't exist");
   }
 
   // Account exists, update its share amount
-  if (!Position::isSymbolExists(C, account_id, symbol_name)) {
-    Position::addPosition(C, symbol_name, account_id, num_share);
+  if (!Position::isSymbolExists(C, account_id_str, symbol_name)) {
+    Position::addPosition(C, symbol_name, account_id_str, num_share);
   }
   else {
-    int old_amount = Position::getSymbolAmount(C, account_id, symbol_name);
-    Position::setSymbolAmount(C, account_id, symbol_name, old_amount + num_share);
+    int old_amount = Position::getSymbolAmount(C, account_id_str, symbol_name);
+    Position::setSymbolAmount(C, account_id_str, symbol_name, old_amount + num_share);
   }
 
   std::stringstream response;
@@ -424,27 +422,26 @@ const std::string order(connection * C,
   // buy - amount * limit FROM balance
   // sell - amount FROM position
 
-  int account_id;
   int amount;
   double limit;
 
   std::stringstream ss;
-  ss << account_id_str << " " << amount_str << " " << limit_str;
-  ss >> account_id >> amount >> limit;
+  ss << amount_str << " " << limit_str;
+  ss >> amount >> limit;
 
   // Check if account exists
-  if (!Account::isAccountExists(C, account_id)) {
+  if (!Account::isAccountExists(C, account_id_str)) {
     return getOrderError(symbol, amount_str, limit_str, "Account doesn't exist");
   }
 
   // Buy: check if account has enough amount * limit balance
   if (amount > 0) {
     double requiredBalance = amount * limit;
-    double ownedBalance = Account::getBalance(C, account_id);
+    double ownedBalance = Account::getBalance(C, account_id_str);
     double result = ownedBalance - requiredBalance;
 
     if (result >= 0) {  // legal
-      Account::setBalance(C, account_id, result);
+      Account::setBalance(C, account_id_str, result);
     }
     else {  // illegal
       return getOrderError(symbol, amount_str, limit_str, "Account doesn't have enough balance to buy");
@@ -452,11 +449,11 @@ const std::string order(connection * C,
   }
   // Sell: check if account has enough position as amount
   else {
-    int ownedAmount = Position::getSymbolAmount(C, account_id, symbol);
+    int ownedAmount = Position::getSymbolAmount(C, account_id_str, symbol);
     int result = ownedAmount + amount;
 
     if (result >= 0) {  // legal
-      Position::setSymbolAmount(C, account_id, symbol, result);
+      Position::setSymbolAmount(C, account_id_str, symbol, result);
     }
     else {  // illegal
       return getOrderError(symbol, amount_str, limit_str, "Account doesn't have enough symbol to sell");
@@ -464,7 +461,7 @@ const std::string order(connection * C,
   }
 
   // Step 3: Create transaction
-  int trans_id = Transaction::addTransaction(C, account_id, symbol, amount);
+  int trans_id = Transaction::addTransaction(C, account_id_str, symbol, amount);
 
   // Step 4: Match one possible at a time
   while (Transaction::trtMatch(C, trans_id)) {}
@@ -494,12 +491,11 @@ const std::string cancel(connection * C,
     return getTransIDError(trans_id_str, "Trans_id is not all digits");
   }
 
-  int account_id;
   int trans_id;
 
   std::stringstream ss;
-  ss << account_id_str << " " << trans_id_str;
-  ss >> account_id >> trans_id;
+  ss << trans_id_str;
+  ss >> trans_id;
 
   // Check whether transaction exists
   if (!Transaction::isTransExists(C, trans_id)) {
@@ -544,12 +540,11 @@ const std::string query(connection * C,
     return header + getTransIDError(trans_id_str, "Trans_id is not all digits") + tailer;
   }
 
-  int account_id;
   int trans_id;
 
   std::stringstream ss;
-  ss << account_id_str << " " << trans_id_str;
-  ss >> account_id >> trans_id;
+  ss << trans_id_str;
+  ss >> trans_id;
 
   // Check whether transaction exists
   if (!Transaction::isTransExists(C, trans_id)) {
