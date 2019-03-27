@@ -450,7 +450,7 @@ const std::string order(connection * C,
   }
 
   // Step 3: Create transaction
-  int trans_id = Transaction::addTransaction(C, account_id_str, symbol, amount);
+  int trans_id = Transaction::addTransaction(C, account_id_str, symbol, limit, amount);
 
   // Step 4: Match one possible at a time
   while (Transaction::tryMatch(C, trans_id)) {
