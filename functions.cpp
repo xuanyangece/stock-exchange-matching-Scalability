@@ -520,8 +520,8 @@ const std::string cancel(connection * C,
   std::stringstream response;
   response << header;  // First line
   response << "    <canceled ";
-  response << "shares=" << canceledShares << " ";
-  response << "time=" << canceledTime << "/>\n";
+  response << "shares=\"" << canceledShares << "\" ";
+  response << "time=\"" << canceledTime << "\"/>\n";
   response << allExecuted;
   response << tailer;  // Last line
   return response.str();
@@ -567,7 +567,7 @@ const std::string query(connection * C,
   // Get open shares if still has open remaining
   int openShares = Transaction::getOpenShares(C, trans_id);
   if (openShares != 0) {  // !!!!!!!!!!! buy & sell
-    openSharesResponse << "    <open shares=" << openShares << "/>\n";
+    openSharesResponse << "    <open shares=\"" << openShares << "\"/>\n";
   }
 
   // Get cancel shares if it has been canceled
@@ -576,8 +576,8 @@ const std::string query(connection * C,
     long canceledTime = Transaction::getCanceledTime(C, trans_id);
 
     canceledResponse << "    <canceled ";
-    canceledResponse << "shares=" << canceledShares << " ";
-    canceledResponse << "time=" << canceledTime << "/>\n";
+    canceledResponse << "shares=\"" << canceledShares << "\" ";
+    canceledResponse << "time=\"" << canceledTime << "\"/>\n";
   }
 
   // Get all executed transactions

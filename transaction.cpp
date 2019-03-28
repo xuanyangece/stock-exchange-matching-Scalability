@@ -212,15 +212,15 @@ const std::string Transaction::queryExecuted(connection * C, int trans_id) {
   std::stringstream ss;
 
   for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
-    ss << "    <executed shares=";
+    ss << "    <executed shares=\"";
     if (trans_id == c[0].as<int>()) {
-      ss << -c[2].as<int>() << " ";
+      ss << c[2].as<int>() << "\" ";
     }
     else {
-      ss << c[2].as<int>() << " ";
+      ss << 0 - c[2].as<int>() << "\" ";
     }
-    ss << "price=" << c[3].as<double>() << " ";
-    ss << "time=" << c[4].as<long>() << "/>\n";
+    ss << "price=\"" << c[3].as<double>() << "\" ";
+    ss << "time=\"" << c[4].as<long>() << "\"/>\n";
   }
 
   return ss.str();
