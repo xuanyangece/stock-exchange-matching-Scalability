@@ -488,6 +488,11 @@ const std::string cancel(connection * C,
     return getTransIDError(trans_id_str, "Trans_id is not all digits");
   }
 
+  // Check if account exists
+  if (!Account::isAccountExists(C, account_id_str)) {
+    return getOrderError(symbol, amount_str, limit_str, "Account doesn't exist");
+  }
+
   int trans_id;
 
   std::stringstream ss;
@@ -535,6 +540,11 @@ const std::string query(connection * C,
   // Check if trans_id is all digits
   if (!isDigits(trans_id_str)) {
     return header + getTransIDError(trans_id_str, "Trans_id is not all digits") + tailer;
+  }
+
+  // Check if account exists
+  if (!Account::isAccountExists(C, account_id_str)) {
+    return getOrderError(symbol, amount_str, limit_str, "Account doesn't exist");
   }
 
   int trans_id;
