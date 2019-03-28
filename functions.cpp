@@ -36,11 +36,18 @@ void handleXML(connection * C, int client_fd) {
 
   // Assume it's correct
   if (xml.find("<create>") != std::string::npos) {
+    if (DEBUG)
+      std::cout << "create request received.\n\n";
     response = create(C, xml);
   }
-  else if (xml.find("<transactions>") != std::string::npos) {
+  else if (xml.find("<transactions") != std::string::npos) {
+    if (DEBUG)
+      std::cout << "transaction request received.\n\n";
     response = transactions(C, xml);
   }
+
+  if (DEBUG)
+    std::cout << "Response back: \n" << response << std::endl;
 
   // Response back
   int len = send(client_fd, response.c_str(), response.length(), MSG_NOSIGNAL);
@@ -158,12 +165,13 @@ const std::string transactions(connection * C, std::string xml) {
 
   size_t start = xml.find('\n') + 1;  // // skip the <transactions ...> line
   size_t end = xml.find("</transactions>");
+
   std::string requests = xml.substr(start, end - start);
 
   if (DEBUG)
     std::cout << std::endl
               << "All requests from transactions: " << std::endl
-              << requests << std::endl
+              << requests << "END HERE" << std::endl
               << std::endl;
 
   // Indicate space between each transaction
@@ -172,15 +180,16 @@ const std::string transactions(connection * C, std::string xml) {
   while (1) {
     // Get line by linebreak's position, xml stands for the remaining content to be parsed
     size_t linebreak = requests.find('\n');
+
     if (linebreak == std::string::npos)
       break;
 
     if (space) {
       ans << "\n";
     }
+    std::string line = requests.substr(0, linebreak);
 
-    std::string line = xml.substr(0, linebreak);
-    std::string singResponse;
+    std::string singleResponse;
     space = true;
 
     if (line.find("order") != std::string::npos) {
@@ -189,23 +198,29 @@ const std::string transactions(connection * C, std::string xml) {
       std::string amount = getAttribute(line, AMOUNT);
       std::string limit = getAttribute(line, LIMIT);
 
-      singResponse = order(C, account_id, symbol, amount, limit);
+      singleResponse = order(C, account_id, symbol, amount, limit);
+      if (DEBUG)
+        std::cout << "Single order response" << singleResponse << std::endl;
     }
     else if (line.find("query") != std::string::npos) {
       // Access trans_id
       std::string trans_id = getAttribute(line, ID);
 
-      singResponse = query(C, account_id, trans_id);
+      singleResponse = query(C, account_id, trans_id);
+      if (DEBUG)
+        std::cout << "Single query response" << singleResponse << std ::endl;
     }
     else if (line.find("cancel") != std::string::npos) {
       // Access trans_id
       std::string trans_id = getAttribute(line, ID);
 
-      singResponse = cancel(C, account_id, trans_id);
+      singleResponse = cancel(C, account_id, trans_id);
+      if (DEBUG)
+        std::cout << "Single cancel response" << singleResponse << std ::endl;
     }
 
     // Append reponse
-    ans << singResponse;
+    ans << singleResponse;
 
     // Skip one line
     requests = requests.substr(linebreak + 1);
