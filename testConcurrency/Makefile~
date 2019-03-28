@@ -1,0 +1,8 @@
+CC=g++
+CFLAGs=-03
+EXTRAFLAGS=-pthread
+
+all: concurrency
+
+concurrency: testConcurrency.cpp
+	$(CC) $(CFLAGS) -o concurrency $(EXTRAFLAGS)

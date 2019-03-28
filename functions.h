@@ -23,10 +23,28 @@ using namespace pqxx;
 using namespace std::chrono;
 
 /*
+    Lock using RAII
+*/
+//BEGIN_REF - https://www.youtube.com/watch?v=ojOUIg13g3I&t=543s
+class MyLock
+{
+ private:
+  std::mutex * mtx;
+
+ public:
+  explicit MyLock(std::mutex * temp) {
+    temp->lock();
+    mtx = temp;
+  }
+
+  ~MyLock() { mtx->unlock(); }
+};
+//END_REF
+
+/*
     Receive XML from client and keep connection until invalid format.
 */
 void handleXML(connection * C, int client_fd);  // parse
-
 
 /*
     Parse create and dispatch different request.
@@ -48,13 +66,11 @@ const std::string createSymbol(connection * C,
                                const std::string & symbol_name,
                                const std::string & num_share_str);
 
-
 /*
     Parse the entire symbol body:
     Do greedy to find all acounts and number of symbols to be added.
 */
 const std::string parseSymbol(connection * C, std::string accounts, std::string symbol);
-
 
 /*
     Parse transactions and dispatch different request.
@@ -84,13 +100,11 @@ const std::string query(connection * C,
                         const std::string & account_id_str,
                         const std::string & trans_id_str);
 
-
 /*
     Access attribute from giving string.
     In our design, it accesses the first one.
 */
 const std::string getAttribute(std::string remain, std::string attribute);
-
 
 /*
     Check whether given string is all digits.
@@ -111,7 +125,6 @@ bool isPositiveDouble(const std::string & str);
     Check whether given string represents a non-zero integer.
 */
 bool isNonZeroInt(const std::string & str);
-
 
 /*
     Return error related to account.
@@ -138,7 +151,6 @@ const std::string getOrderError(const std::string & symbol_name,
     Return error related to trans_id.
 */
 const std::string getTransIDError(const std::string & trans_id_str, const std::string & msg);
-
 
 /*
     Helper function to get current timestamp.
