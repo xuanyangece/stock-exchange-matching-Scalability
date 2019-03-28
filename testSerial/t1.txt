@@ -1,0 +1,5 @@
+<transactions id="123">
+  <order sym="Nike" amount="-50" limit="20"/>  # 1
+  <query id="5">
+  <cancel id="1">
+</transactions>

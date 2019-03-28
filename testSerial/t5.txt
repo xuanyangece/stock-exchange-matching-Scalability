@@ -1,0 +1,4 @@
+# buy 50 nike for $20 each
+<transactions id="456">
+  <order sym="Nike" amount="50" limit="20"/>  # 6
+</transactions>

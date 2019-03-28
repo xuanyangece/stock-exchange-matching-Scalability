@@ -1,0 +1,5 @@
+# buy 50 nike for $20 each, then buy 10 Adidas for $15 each
+<transactions id="123">
+  <order sym="Nike" amount="50" limit="20"/>  # 4
+  <order sym="Adidas" amount="10" limit="15"/>  # 5
+</transactions>

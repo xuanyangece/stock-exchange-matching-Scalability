@@ -1,0 +1,14 @@
+# README test
+<create>
+  <account id="111" balance="10000000000"/>
+  <account id="333" balance="10000000000"/>
+  <account id="666" balance="10000000000"/>
+  <account id="222" balance="10000000000"/>
+  <account id="444" balance="10000000000"/>
+  <account id="555" balance="10000000000"/>
+  <symbol sym="X">
+    <account id="222">500</account>
+    <account id="444">500</account>
+    <account id="555">500</account>
+  </symbol>
+</create>

@@ -1,0 +1,16 @@
+# valid data
+<create>
+  <account id="123" balance="9999"/>
+  <symbol sym="Nike">
+    <account id="123">100</account>
+    <account id="123">200</account>
+    <account id="456">131</account>
+    <account id="777">90</account>
+  </symbol>
+  <account id="456" balance="7391"/>
+  <symbol sym="Adidas">
+    <account id="456">131</account>
+    <account id="123">-90</account>
+  </symbol>
+  <account id="123" balance="9999"/>
+</create>

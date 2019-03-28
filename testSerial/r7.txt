@@ -1,0 +1,3 @@
+<transactions id="666">
+  <order sym="X" amount="400" limit="125"/>  # 6
+</transactions>
