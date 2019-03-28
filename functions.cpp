@@ -11,7 +11,30 @@
 #define AMOUNT "amount"
 #define LIMIT "limit"
 
-void handleXML(connection * C, int client_fd) {
+void handleXML(connection * C1, int client_fd) {
+  // Add mutex
+  MyLock lk(&mymutex);
+
+  // Allocate & initialize a Postgres connection object
+  connection * C;
+
+  try {
+    // Establish a connection to the database
+    // Parameters: database name, user name, user password
+    C = new connection("dbname=MARKET_XUAN_KAI user=postgres password=passw0rd");
+    if (C->is_open()) {
+      // cout << "Opened database successfully: " << C->dbname() << endl;
+    }
+    else {
+      std::cout << "Can't open database" << std::endl;
+      return;
+    }
+  }
+  catch (const std::exception & e) {
+    std::cerr << e.what() << std::endl;
+    return;
+  }
+
   // loop and dispatch
   char buffer[BUFFSIZE];
 
@@ -51,6 +74,10 @@ void handleXML(connection * C, int client_fd) {
 
   // Response back
   send(client_fd, response.c_str(), response.length(), MSG_NOSIGNAL);
+
+  // Close database connection
+  C->disconnect();
+  delete C;
 
   // Close connection
   close(client_fd);

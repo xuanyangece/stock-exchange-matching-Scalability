@@ -12,6 +12,8 @@
 #define DEVELOPMENT 1  // Development or production
 #define PORT "12345"   // Default port 12345 as required
 
+std::mutex mymutex;
+
 int main(int argc, char ** argv) {
   // Create socket
   int status;
@@ -55,7 +57,7 @@ int main(int argc, char ** argv) {
   }  // if
 
   // Listening
-  if (listen(sockfd, 20) != 0) {
+  if (listen(sockfd, 100) != 0) {
     std::cout << "Error in listening" << std::endl;
     exit(1);
   }
@@ -100,6 +102,10 @@ int main(int argc, char ** argv) {
     return 1;
   }
 
+  // Close database connection
+  // C->disconnect();
+  // delete C;
+
   if (DEVELOPMENT) {
     std::cout << "Server starts running..." << std::endl;
   }
@@ -113,6 +119,7 @@ int main(int argc, char ** argv) {
     int reqfd = accept(sockfd, (struct sockaddr *)&socket_addr, &socket_addr_len);
     if (reqfd < 0) {
       std::cout << "Error in accept" << std::endl;
+      std::cout << errno << std::endl;
       exit(1);
     }
 

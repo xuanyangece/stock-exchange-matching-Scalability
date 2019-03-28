@@ -22,6 +22,8 @@
 using namespace pqxx;
 using namespace std::chrono;
 
+extern std::mutex mymutex;
+
 /*
     Lock using RAII
 */
