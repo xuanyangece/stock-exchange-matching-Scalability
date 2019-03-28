@@ -50,7 +50,7 @@ void handleXML(connection * C, int client_fd) {
     std::cout << "Response back: \n" << response << std::endl;
 
   // Response back
-  int len = send(client_fd, response.c_str(), response.length(), MSG_NOSIGNAL);
+  send(client_fd, response.c_str(), response.length(), MSG_NOSIGNAL);
 
   // Close connection
   close(client_fd);
@@ -469,6 +469,7 @@ const std::string order(connection * C,
   response << "amount=\"" << amount_str << "\" ";
   response << "limit=\"" << limit_str << "\" ";
   response << "id=\"" << trans_id << "\"/>\n";
+
   return response.str();
 }
 
@@ -490,7 +491,7 @@ const std::string cancel(connection * C,
 
   // Check if account exists
   if (!Account::isAccountExists(C, account_id_str)) {
-    return getOrderError(symbol, amount_str, limit_str, "Account doesn't exist");
+    return getCreateAccountError(account_id_str, "Account doesn't exist");
   }
 
   int trans_id;
@@ -544,7 +545,7 @@ const std::string query(connection * C,
 
   // Check if account exists
   if (!Account::isAccountExists(C, account_id_str)) {
-    return getOrderError(symbol, amount_str, limit_str, "Account doesn't exist");
+    return getCreateAccountError(account_id_str, "Account doesn't exist");
   }
 
   int trans_id;

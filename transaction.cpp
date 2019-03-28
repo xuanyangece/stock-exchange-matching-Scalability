@@ -246,7 +246,7 @@ void Transaction::cancelTransaction(connection * C, int trans_id) {
   else {  // return symbol
     string symbol_name = Transaction::getSymbolName(C, trans_id);
     int num_share = Position::getSymbolAmount(C, account_id, symbol_name);
-    Position::setSymbolAmount(C, account_id, symbol_name, num_share + num_open);
+    Position::setSymbolAmount(C, account_id, symbol_name, num_share - num_open);
   }
 }
 
@@ -338,6 +338,10 @@ bool Transaction::tryMatch(connection * C, int trans_id) {
   /* Execute SQL query */
   result rst(N.exec(getTrans.str()));
 
+  if (rst.size() == 0) {
+    return false;
+  }
+
   int other_trans_id = rst[0]["TRANSACTION_ID"].as<int>();
   string other_account_id = rst[0]["ACCOUNT_ID"].as<string>();
   string other_symbol_name = rst[0]["SYMBOL_NAME"].as<string>();
@@ -347,34 +351,45 @@ bool Transaction::tryMatch(connection * C, int trans_id) {
   // Get final price
   final_price = other_limited;
 
-  if (isBuyer) {                        // _num_open: 100
-    if (num_open <= -other_num_open) {  // other_num_open: -150, completed matching
-      final_amount = num_open;          // 100
+  N.commit();
+
+  if (isBuyer) {                           // num_open: 100
+    if (num_open <= 0 - other_num_open) {  // other_num_open: -150, completed matching
+      final_amount = num_open;             // 100
       // Update symbol amount
       Transaction::setOpenShares(C, trans_id, 0);
       Transaction::setOpenShares(C, other_trans_id, other_num_open + final_amount);  // -50
     }
-    else {                             // other_num_open: -30, partial matchin
-      final_amount = -other_num_open;  // 30
-                                       // Update symbol amount
+    else {                                // other_num_open: -30, partial matchin
+      final_amount = 0 - other_num_open;  // 30
+                                          // Update symbol amount
       Transaction::setOpenShares(C, trans_id, num_open - final_amount);  // 70
       Transaction::setOpenShares(C, other_trans_id, 0);
     }
+
     // Return money to buyer
     double oldBalance = Account::getBalance(C, account_id);
     Account::setBalance(C, account_id, oldBalance + final_amount * (limited - other_limited));
+
     // Give symbol to buyer
-    int oldNum = Position::getSymbolAmount(C, account_id, symbol_name);
-    Position::setSymbolAmount(C, account_id, symbol_name, oldNum + final_amount);
+    if (Position::isSymbolExists(C, account_id, symbol_name)) {
+      int oldNum = Position::getSymbolAmount(C, account_id, symbol_name);
+      Position::setSymbolAmount(C, account_id, symbol_name, oldNum + final_amount);
+    }
+    else {
+      Position::addPosition(C, symbol_name, account_id, final_amount);
+    }
+
     // Give money to seller
     oldBalance = Account::getBalance(C, other_account_id);
     Account::setBalance(C, other_account_id, oldBalance + final_amount * final_price);
+
     // Create execution
     Execution::addExecution(C, trans_id, other_trans_id, final_amount, final_price);
   }
-  else {                                // _num_open: -100
-    if (-num_open <= other_num_open) {  // other_num_open: 150, completed matching
-      final_amount = -num_open;         // 100
+  else {                                   // num_open: -100
+    if (0 - num_open <= other_num_open) {  // other_num_open: 150, completed matching
+      final_amount = -num_open;            // 100
       // Update symbol amount
       Transaction::setOpenShares(C, trans_id, 0);
       Transaction::setOpenShares(C, other_trans_id, other_num_open - final_amount);  // 50
@@ -382,16 +397,24 @@ bool Transaction::tryMatch(connection * C, int trans_id) {
     else {                            // other_num_open: 30, partial matchin
       final_amount = other_num_open;  // 30
                                       // Update symbol amount
-      Transaction::setOpenShares(C, trans_id, -num_open - final_amount);  // 70
+      Transaction::setOpenShares(C, trans_id, num_open + final_amount);  // -70
       Transaction::setOpenShares(C, other_trans_id, 0);
     }
     // Return money to buyer: nothing
+
     // Give symbol to buyer
-    int oldNum = Position::getSymbolAmount(C, other_account_id, symbol_name);
-    Position::setSymbolAmount(C, other_account_id, symbol_name, oldNum + final_amount);
+    if (Position::isSymbolExists(C, other_account_id, symbol_name)) {
+      int oldNum = Position::getSymbolAmount(C, other_account_id, symbol_name);
+      Position::setSymbolAmount(C, other_account_id, symbol_name, oldNum + final_amount);
+    }
+    else {
+      Position::addPosition(C, symbol_name, other_account_id, final_amount);
+    }
+
     // Give money to seller
     double oldBalance = Account::getBalance(C, account_id);
     Account::setBalance(C, account_id, oldBalance + final_amount * final_price);
+
     // Create execution
     Execution::addExecution(C, other_trans_id, trans_id, final_amount, final_price);
   }

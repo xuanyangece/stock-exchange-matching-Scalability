@@ -1,6 +1,7 @@
 #include "position.h"
 
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <string>
 
@@ -79,6 +80,9 @@ int Position::getSymbolAmount(connection * C,
 
   /* Execute SQL query */
   result R(N.exec(sql.str()));
+  if (R.size() == 0) {
+    return 0;
+  }
 
   return R[0][0].as<int>();
 }
