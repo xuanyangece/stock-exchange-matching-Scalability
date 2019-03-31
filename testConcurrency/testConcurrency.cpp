@@ -10,13 +10,17 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <chrono>
+#include <ctime>
+#include <ratio>
 
 using namespace std;
+using namespace std::chrono;
 
 #define SERVERNAME "vcm-7992.vm.duke.edu"
 #define PORT "12345"
 
-void sendRequest();
+void sendRequest(int curt, int all);
 
 string account(const char *id, int balance);
 
@@ -35,6 +39,10 @@ string cancel(int trans_id);
 const char *account_ids[5] = {"001", "002", "003", "004", "005"};
 const char *items[5] = {"Durex", "Jasbon", "Six", "God", "Guilty"};
 
+// start time && end time
+high_resolution_clock::time_point starttime;
+high_resolution_clock::time_point endtime;
+
 int main(int argc, char **argv) {
   if (argc == 1)
     return 0;
@@ -49,8 +57,11 @@ int main(int argc, char **argv) {
   std::vector<std::thread> threads;
 
   for (int i = 0; i < times; i++) {
-    threads.push_back(std::thread(sendRequest));
+    threads.push_back(std::thread(sendRequest, i, times));
   }
+
+  // get start time
+  starttime = high_resolution_clock::now();
 
   try {
     for (int i = 0; i < times; i++) {
@@ -75,7 +86,7 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-void sendRequest() {
+void sendRequest(int curt, int all) {
   // Generate request body
   string request;
 
@@ -134,6 +145,14 @@ void sendRequest() {
   recv(socket_fd, buffer, 51240, 0);
 
   cout << "Response: \n" << buffer << endl;
+
+  if (curt == all - 1) {
+    // get finish time
+    endtime = high_resolution_clock::now();
+    duration<double> time_span = duration_cast<duration<double> >(endtime - starttime);
+    cout << "\nWith " << all << " threads sending requests concurrently, ";
+    cout << "it takes " << time_span.count() << " seconds to finish.\n";
+  }
 
   freeaddrinfo(host_info_list);
   close(socket_fd);
