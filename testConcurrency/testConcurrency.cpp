@@ -1,18 +1,18 @@
 #include <netdb.h>
-#include <stdlib.h> /* srand, rand */
 #include <sys/socket.h>
 #include <time.h> /* time */
 #include <unistd.h>
 
+#include <chrono>
 #include <cstring>
+#include <ctime>
 #include <iostream>
+#include <random>
+#include <ratio>
 #include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
-#include <chrono>
-#include <ctime>
-#include <ratio>
 
 using namespace std;
 using namespace std::chrono;
@@ -90,13 +90,15 @@ void sendRequest(int curt, int all) {
   // Generate request body
   string request;
 
-  /* initialize random seed: */
-  srand(time(NULL));
+  /* initialize random num: */
+  std::random_device rd;  // obtain a random number from hardware
+  std::mt19937 eng(rd()); // seed the generator
+  std::uniform_int_distribution<> distr(1, 10); // define the range
 
   /* generate secret number between 1 and 10: */
-  int iSecret = rand() % 10 + 1;
+  int iSecret = distr(eng);
 
-  if (iSecret <= 2) { // create
+  if (iSecret <= 3) { // create
     request = create();
   } else { // transaction
     request = transactions();
@@ -140,6 +142,8 @@ void sendRequest(int curt, int all) {
 
   send(socket_fd, request.c_str(), request.length(), 0);
 
+  cout << "Request: \n" << request << endl;
+
   char buffer[51240];
   memset(&buffer, '\0', sizeof(buffer));
   recv(socket_fd, buffer, 51240, 0);
@@ -149,7 +153,8 @@ void sendRequest(int curt, int all) {
   if (curt == all - 1) {
     // get finish time
     endtime = high_resolution_clock::now();
-    duration<double> time_span = duration_cast<duration<double> >(endtime - starttime);
+    duration<double> time_span =
+        duration_cast<duration<double>>(endtime - starttime);
     cout << "\nWith " << all << " threads sending requests concurrently, ";
     cout << "it takes " << time_span.count() << " seconds to finish.\n";
   }
@@ -164,19 +169,24 @@ string create() {
 
   for (int i = 0; i < 5; i++) {
     /* initialize random seed: */
-    srand(time(NULL));
+    std::random_device rd;  // obtain a random number from hardware
+    std::mt19937 eng(rd()); // seed the generator
+    std::uniform_int_distribution<> distr(1, 10000000); // define the range
 
     /* generate secret number between 1 and 10: */
-    int option = rand() % 10 + 1;
-    int balance = rand() % 10000000;
+    int option = distr(eng) % 10 + 1;
+
+    int balance = distr(eng);
 
     if (option <= 5) { // create
-      int id = rand() % 5;
+      int id = distr(eng) % 5;
+
       ss << account(account_ids[id], balance);
     } else { // transaction
-      int name = rand() % 5;
-      int id = rand() % 5 * 6 % 5;
-      int num = rand() % 200;
+      int name = distr(eng) % 5;
+      int id = distr(eng) % 5;
+      int num = distr(eng) % 200;
+
       ss << symbol(items[name], account_ids[id], num);
     }
   }
@@ -190,32 +200,31 @@ string transactions() {
   ss << "<transactions id=\"";
 
   /* initialize random seed: */
-  srand(time(NULL));
-  int act_id = rand() % 5; // id
-  ss << act_id << "\">\n";
+  std::random_device rd;  // obtain a random number from hardware
+  std::mt19937 eng(rd()); // seed the generator
+  std::uniform_int_distribution<> distr(1, 100000); // define the range
+
+  ss << distr(eng) % 5 << "\">\n";
 
   for (int i = 0; i < 10; i++) {
-    /* initialize random seed: */
-    srand(time(NULL));
-
     /* generate secret number between 1 and 12: */
-    int option = rand() % 12 + 1;
+    int option = distr(eng) % 12 + 1;
 
     if (option <= 7) { // order
-      srand(time(NULL));
-      int sym = rand() % 5;
-      int amount = rand() % 33;
-      if (rand() % 10 % 2 == 0)
+      int sym = distr(eng) % 5;
+      int amount = distr(eng) % 33;
+      if (distr(eng) % 10 % 2 == 0)
         amount = 0 - amount;
-      int limit = rand() % 100;
+      int limit = distr(eng) % 100;
+
       ss << order(items[sym], amount, limit);
     } else if (option >= 8 && option <= 10) { // query
-      srand(time(NULL));
-      int trans_id = rand() % 500 + 1;
+      int trans_id = distr(eng) % 500 + 1;
+
       ss << query(trans_id);
     } else { // cancel
-      srand(time(NULL));
-      int trans_id = rand() % 500 + 1;
+      int trans_id = distr(eng) % 500 + 1;
+
       ss << cancel(trans_id);
     }
   }
