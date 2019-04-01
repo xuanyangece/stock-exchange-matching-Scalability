@@ -13,7 +13,7 @@
 
 void handleXML(connection * C1, int client_fd) {
   // Add mutex
-  MyLock lk(&mymutex);
+  // MyLock lk(&mymutex);
 
   // Allocate & initialize a Postgres connection object
   connection * C;
@@ -81,6 +81,10 @@ void handleXML(connection * C1, int client_fd) {
 
   // Close connection
   close(client_fd);
+}
+
+const connection * createConnection() {
+  return NULL;
 }
 
 const std::string create(connection * C, std::string xml) {
@@ -276,14 +280,12 @@ const std::string createAccount(connection * C,
   ss << balance_str;
   ss >> balance;
 
-  // Check if account already exists
-  if (Account::isAccountExists(C, account_id_str)) {
+  // Check and create account if possible
+  if (!Account::addAccount(C, account_id_str, balance)) {
     return getCreateAccountError(account_id_str, "Account already exists");
   }
 
   // Account not exists, create it
-  Account::addAccount(C, account_id_str, balance);
-
   std::stringstream response;
   response << "  <created id=\"" << account_id_str << "\"/>\n";
   return response.str();

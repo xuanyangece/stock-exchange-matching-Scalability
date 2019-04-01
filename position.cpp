@@ -11,10 +11,10 @@ void Position::createTable(connection * C) {
   string dropExistingTableSql = "DROP TABLE IF EXISTS POSITION CASCADE;";
 
   string createTableSql = "CREATE TABLE POSITION ("
-                          "POSITION_ID     SERIAL  PRIMARY KEY NOT NULL, "
                           "SYMBOL_NAME     TEXT    NOT NULL, "
                           "ACCOUNT_ID      TEXT    NOT NULL, "
-                          "NUM_SHARE       INT     NOT NULL);";
+                          "NUM_SHARE       INT     NOT NULL, "
+                          "PRIMARY KEY (SYMBOL_NAME, ACCOUNT_ID));";
 
   Table::createTable(C, dropExistingTableSql, createTableSql);
 }
@@ -37,9 +37,10 @@ void Position::addPosition(connection * C,
   work W(*C);
 
   /* Create SQL statement */
+
   std::stringstream sql;
-  sql << "Insert INTO POSITION (POSITION_ID, SYMBOL_NAME, ACCOUNT_ID, NUM_SHARE) ";
-  sql << "VALUES ( DEFAULT, ";
+  sql << "Insert INTO POSITION (SYMBOL_NAME, ACCOUNT_ID, NUM_SHARE) ";
+  sql << "VALUES (";
   sql << W.quote(symbol_name) << ", ";
   sql << W.quote(account_id) << ", ";
   sql << W.quote(num_share) << ");";

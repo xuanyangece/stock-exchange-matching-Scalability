@@ -22,8 +22,8 @@ void Account::buildForeignKeys(connection * C) {
   Table::buildForeignKeys(C, buildForeignKeysSql);
 }
 
-/* Add a new entry to the table */
-void Account::addAccount(connection * C, const string & account_id, double balance) {
+/* Add a new entry to the table, return true if succeed */
+bool Account::addAccount(connection * C, const string & account_id, double balance) {
   /* Create a transactional object. */
   work W(*C);
 
@@ -34,8 +34,19 @@ void Account::addAccount(connection * C, const string & account_id, double balan
   sql << W.quote(account_id) << ", ";
   sql << W.quote(balance) << ");";
 
-  W.exec(sql.str());
-  W.commit();
+  try {
+    W.exec(sql.str());
+    W.commit();
+  }
+  catch (const std::exception & e) {
+    if (DEBUG) {
+      std::cerr << e.what() << std::endl;
+    }
+    W.abort();
+    return false;
+  }
+
+  return true;
 }
 
 /* Check if the given account already exists */

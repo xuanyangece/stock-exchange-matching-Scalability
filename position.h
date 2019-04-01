@@ -12,7 +12,6 @@ using namespace pqxx;
 class Position
 {
  private:
-  // int position_id;
   // string symbol_name;
   // string account_id;
   // int num_share;
