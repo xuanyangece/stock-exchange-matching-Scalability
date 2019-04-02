@@ -528,13 +528,10 @@ const std::string cancel(connection * C,
     return header + getTransIDError(trans_id_str, "Transaction doesn't exist") + tailer;
   }
 
-  // Transaction exists, check whether if can cancel
-  if (Transaction::isTransCompleted(C, trans_id)) {
+  // Transaction exists, cancel if not completed
+  if (!Transaction::cancelTransaction(C, trans_id)) {
     return header + getTransIDError(trans_id_str, "Transaction cannot be canceled") + tailer;
   }
-
-  // Can cancel, do it
-  Transaction::cancelTransaction(C, trans_id);
 
   int canceledShares = Transaction::getCanceledShares(C, trans_id);
   long canceledTime = Transaction::getCanceledTime(C, trans_id);

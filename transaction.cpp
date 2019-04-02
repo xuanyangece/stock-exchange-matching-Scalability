@@ -228,26 +228,80 @@ const std::string Transaction::queryExecuted(connection * C, int trans_id) {
 
 // void Transaction::queryTransaction() {}
 
-void Transaction::cancelTransaction(connection * C, int trans_id) {
-  int num_open = Transaction::getOpenShares(C, trans_id);
-  Transaction::setOpenShares(C, trans_id, 0);
-  Transaction::setCanceledShares(C, trans_id, num_open);
-  Transaction::setCanceledTime(C, trans_id, getEpoch());
+bool Transaction::cancelTransaction(connection * C, int trans_id) {
+  /* Create a transactional object. */
+  work W1(*C);
+
+  /* Create SQL statement */
+  std::stringstream sql1;
+  sql1 << "SELECT NUM_OPEN FROM TRANSACTION WHERE TRANSACTION_ID=";
+  sql1 << W1.quote(trans_id) << " FOR UPDATE;";
+
+  /* Execute SQL query */
+  result R(W1.exec(sql1.str()));
+
+  int num_open = R[0]["NUM_OPEN"].as<int>();
+
+  // Trans already completed
+  if (num_open == 0) {
+    W1.commit();
+    return false;
+  }
+
+  /* Create SQL statement */
+  std::stringstream sql2;
+  sql2 << "UPDATE TRANSACTION SET ";
+  sql2 << "NUM_CANCEL = TRANSACTION.NUM_OPEN, ";
+  sql2 << "NUM_OPEN = 0, ";
+  sql2 << "CANCEL_TIME = " << W1.quote(getEpoch()) << ";";
+
+  W1.exec(sql2);
+  W1.commit();
 
   string account_id = Transaction::getAccountID(C, trans_id);
 
   bool isBuyer = (num_open > 0);
 
+  work W2(*C);
+
   if (isBuyer) {  // return money
     double limited = Transaction::getLimited(C, trans_id);
-    double balance = Account::getBalance(C, account_id);
-    Account::setBalance(C, account_id, balance + num_open * limited);
+
+    std::stringstream sql3;
+    sql3 << "SELECT BALANCE FROM ACCOUNT WHERE ACCOUNT_ID = ";
+    sql3 << W2.quote(account_id) << " FOR UPDATE;";
+
+    result R2(W2.exec(sql3.str()));
+    double balance = R2[0]["BALANCE"].as<double>();
+
+    balance = balance + num_open * limited;
+
+    std::stringstream sql4;
+    sql4 << "UPDATE ACCOUNT SET BALANCE = ";
+    sql4 << W2.quote(balance) << " ";
+    sql4 << "WHERE ACCOUNT_ID = ";
+    sql4 << W2.quote(account_id) << ";";
+
+    W2.exec(sql4);
+    W2.commit();
   }
   else {  // return symbol
     string symbol_name = Transaction::getSymbolName(C, trans_id);
-    int num_share = Position::getSymbolAmount(C, account_id, symbol_name);
-    Position::setSymbolAmount(C, account_id, symbol_name, num_share - num_open);
+
+    /* Create SQL statement */
+    std::stringstream sql5;
+    sql5 << "UPDATE POSITION SET ";
+    sql5 << "NUM_SHARE = POSITION.NUM_SHARE - " << W2.quote(num_open) << " ";
+    sql5 << "WHERE ACCOUNT_ID = ";
+    sql5 << W2.quote(account_id) << " ";
+    sql5 << "AND SYMBOL_NAME = " << W2.quote(symbol_name) << ";";
+
+    /* Execute SQL query */
+    W2.exec(sql5.str());
+    W2.commit();
   }
+
+  return true;
 }
 
 void Transaction::setOpenShares(connection * C, int trans_id, int amount) {

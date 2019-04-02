@@ -41,7 +41,7 @@ class Transaction
 
   static bool isTransCanceled(connection * C, int trans_id);
 
-  static void cancelTransaction(connection * C, int trans_id);
+  static bool cancelTransaction(connection * C, int trans_id);
 
   static long getCanceledTime(connection * C, int trans_id);
 
