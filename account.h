@@ -29,6 +29,8 @@ class Account
   static void setBalance(connection * C, const string & account_id, double balance);
 
   static bool reduceBalance(connection * C, const string & account_id, double payment);
+
+  static void addBalance(work & W, const string & account_id, double payment);
 };
 
 #endif
