@@ -17,7 +17,7 @@
 using namespace std;
 using namespace std::chrono;
 
-#define SERVERNAME "vcm-7992.vm.duke.edu"
+#define SERVERNAME "vcm-8930.vm.duke.edu"
 #define PORT "12345"
 
 void sendRequest(int curt, int all);
@@ -137,9 +137,11 @@ void sendRequest(int curt, int all) {
     return;
   } // if
 
-  send(socket_fd, request.c_str(), request.length(), 0);
+  string finalreq = std::to_string(request.size()) + "\n" + request;
 
-  cout << "Request: \n" << request << endl;
+  send(socket_fd, finalreq.c_str(), finalreq.length(), 0);
+
+  cout << "Request: \n" << finalreq << endl;
 
   char buffer[51240];
   memset(&buffer, '\0', sizeof(buffer));
