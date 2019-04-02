@@ -379,14 +379,8 @@ const std::string createSymbol(connection * C,
     return getCreateSymbolError(account_id_str, symbol_name, "Account doesn't exist");
   }
 
-  // Account exists, update its share amount
-  if (!Position::isSymbolExists(C, account_id_str, symbol_name)) {
-    Position::addPosition(C, symbol_name, account_id_str, num_share);
-  }
-  else {
-    int old_amount = Position::getSymbolAmount(C, account_id_str, symbol_name);
-    Position::setSymbolAmount(C, account_id_str, symbol_name, old_amount + num_share);
-  }
+  // Account exists, insert new position or update existing position
+  Position::addPosition(C, symbol_name, account_id_str, num_share);
 
   std::stringstream response;
   response << "  <created ";

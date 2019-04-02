@@ -14,7 +14,7 @@ void Position::createTable(connection * C) {
                           "SYMBOL_NAME     TEXT    NOT NULL, "
                           "ACCOUNT_ID      TEXT    NOT NULL, "
                           "NUM_SHARE       INT     NOT NULL, "
-                          "PRIMARY KEY (SYMBOL_NAME, ACCOUNT_ID));";
+                          "CONSTRAINT POSITION_PKEY PRIMARY KEY (SYMBOL_NAME, ACCOUNT_ID));";
 
   Table::createTable(C, dropExistingTableSql, createTableSql);
 }
@@ -43,7 +43,10 @@ void Position::addPosition(connection * C,
   sql << "VALUES (";
   sql << W.quote(symbol_name) << ", ";
   sql << W.quote(account_id) << ", ";
-  sql << W.quote(num_share) << ");";
+  sql << W.quote(num_share) << ") ";
+  sql << "ON CONFLICT ON CONSTRAINT POSITION_PKEY ";
+  sql << "DO UPDATE SET NUM_SHARE = POSITION.NUM_SHARE + ";
+  sql << W.quote(num_share) << ";";
 
   W.exec(sql.str());
   W.commit();
