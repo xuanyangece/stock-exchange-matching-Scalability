@@ -17,7 +17,7 @@
 using namespace std;
 using namespace std::chrono;
 
-#define SERVERNAME "vcm-8930.vm.duke.edu"
+#define SERVERNAME "vcm-7992.vm.duke.edu"
 #define PORT "12345"
 
 void sendRequest(int curt, int all);
