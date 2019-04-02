@@ -34,6 +34,11 @@ class Position
                               const string & account_id,
                               const string & symbol_name,
                               int amount);
+
+  static bool reduceSymbolAmount(connection * C,
+                                 const string & account_id,
+                                 const string & symbol_name,
+                                 int requiredAmount);
 };
 
 #endif

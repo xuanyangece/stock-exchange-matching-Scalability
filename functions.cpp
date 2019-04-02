@@ -12,9 +12,6 @@
 #define LIMIT "limit"
 
 void handleXML(connection * C1, int client_fd) {
-  // Add mutex
-  // MyLock lk(&mymutex);
-
   // Allocate & initialize a Postgres connection object
   connection * C;
 
@@ -454,26 +451,15 @@ const std::string order(connection * C,
   // Buy: check if account has enough amount * limit balance
   if (amount > 0) {
     double requiredBalance = amount * limit;
-    double ownedBalance = Account::getBalance(C, account_id_str);
-    double result = ownedBalance - requiredBalance;
 
-    if (result >= 0) {  // legal
-      Account::setBalance(C, account_id_str, result);
-    }
-    else {  // illegal
+    if (!Account::reduceBalance(C, account_id_str, requiredBalance)) {
       return getOrderError(
           symbol, amount_str, limit_str, "Account doesn't have enough balance to buy");
     }
   }
   // Sell: check if account has enough position as amount
-  else {
-    int ownedAmount = Position::getSymbolAmount(C, account_id_str, symbol);
-    int result = ownedAmount + amount;
-
-    if (result >= 0) {  // legal
-      Position::setSymbolAmount(C, account_id_str, symbol, result);
-    }
-    else {  // illegal
+  else {  // amount < 0
+    if (!Position::reduceSymbolAmount(C, account_id_str, symbol, 0 - amount)) {
       return getOrderError(
           symbol, amount_str, limit_str, "Account doesn't have enough symbol to sell");
     }

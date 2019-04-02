@@ -110,3 +110,40 @@ void Position::setSymbolAmount(connection * C,
   W.exec(sql.str());
   W.commit();
 }
+
+bool Position::reduceSymbolAmount(connection * C,
+                                  const string & account_id,
+                                  const string & symbol_name,
+                                  int requiredAmount) {
+  work W(*C);
+
+  std::stringstream sql1;
+  sql1 << "SELECT NUM_SHARE FROM POSITION WHERE ACCOUNT_ID = ";
+  sql1 << W.quote(account_id) << " ";
+  sql1 << "AND SYMBOL_NAME = " << W.quote(symbol_name) << " FOR UPDATE;";
+
+  result R(W.exec(sql1.str()));
+  if (R.size() == 0) {
+    return false;
+  }
+
+  int num_share = R[0]["NUM_SHARE"].as<int>();
+  int remain = num_share - requiredAmount;
+
+  if (remain < 0) {
+    W.commit();
+    return false;
+  }
+
+  std::stringstream sql2;
+  sql2 << "UPDATE POSITION SET NUM_SHARE = ";
+  sql2 << W.quote(remain) << " ";
+  sql2 << "WHERE ACCOUNT_ID = ";
+  sql2 << W.quote(account_id) << " ";
+  sql2 << "AND SYMBOL_NAME = " << W.quote(symbol_name) << ";";
+
+  W.exec(sql2.str());
+  W.commit();
+
+  return true;
+}

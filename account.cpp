@@ -95,3 +95,31 @@ void Account::setBalance(connection * C, const string & account_id, double balan
   W.exec(sql.str());
   W.commit();
 }
+
+bool Account::reduceBalance(connection * C, const string & account_id, double payment) {
+  work W(*C);
+
+  std::stringstream sql1;
+  sql1 << "SELECT BALANCE FROM ACCOUNT WHERE ACCOUNT_ID=";
+  sql1 << W.quote(account_id) << " FOR UPDATE;";
+
+  result R(W.exec(sql1.str()));
+
+  double amount = R[0]["BALANCE"].as<double>();
+  double remain = amount - payment;
+  if (remain < 0) {
+    W.commit();
+    return false;
+  }
+
+  std::stringstream sql2;
+  sql2 << "UPDATE ACCOUNT SET BALANCE = ";
+  sql2 << W.quote(remain) << " ";
+  sql2 << "WHERE ACCOUNT_ID=";
+  sql2 << W.quote(account_id) << ";";
+
+  W.exec(sql2.str());
+  W.commit();
+
+  return true;
+}
