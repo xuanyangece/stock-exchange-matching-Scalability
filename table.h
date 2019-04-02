@@ -1,8 +1,12 @@
 #ifndef TABLE_H
 #define TABLE_H
 
+#include <exception>
+#include <iostream>
 #include <pqxx/pqxx>
 #include <string>
+
+#define DEBUG 1
 
 using std::string;
 using namespace pqxx;

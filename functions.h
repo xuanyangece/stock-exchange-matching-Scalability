@@ -48,6 +48,8 @@ class MyLock
 */
 void handleXML(connection * C, int client_fd);  // parse
 
+const connection * createConnection();
+
 /*
     Parse create and dispatch different request.
 */

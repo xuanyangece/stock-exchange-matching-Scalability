@@ -20,7 +20,7 @@ class Account
 
   static void buildForeignKeys(connection * C);
 
-  static void addAccount(connection * C, const string & account_id, double balance);
+  static bool addAccount(connection * C, const string & account_id, double balance);
 
   static bool isAccountExists(connection * C, const string & account_id);
 

@@ -13,7 +13,7 @@
 
 void handleXML(connection * C1, int client_fd) {
   // Add mutex
-  MyLock lk(&mymutex);
+  // MyLock lk(&mymutex);
 
   // Allocate & initialize a Postgres connection object
   connection * C;
@@ -81,6 +81,10 @@ void handleXML(connection * C1, int client_fd) {
 
   // Close connection
   close(client_fd);
+}
+
+const connection * createConnection() {
+  return NULL;
 }
 
 const std::string create(connection * C, std::string xml) {
@@ -276,14 +280,12 @@ const std::string createAccount(connection * C,
   ss << balance_str;
   ss >> balance;
 
-  // Check if account already exists
-  if (Account::isAccountExists(C, account_id_str)) {
+  // Check and create account if possible
+  if (!Account::addAccount(C, account_id_str, balance)) {
     return getCreateAccountError(account_id_str, "Account already exists");
   }
 
   // Account not exists, create it
-  Account::addAccount(C, account_id_str, balance);
-
   std::stringstream response;
   response << "  <created id=\"" << account_id_str << "\"/>\n";
   return response.str();
@@ -377,14 +379,8 @@ const std::string createSymbol(connection * C,
     return getCreateSymbolError(account_id_str, symbol_name, "Account doesn't exist");
   }
 
-  // Account exists, update its share amount
-  if (!Position::isSymbolExists(C, account_id_str, symbol_name)) {
-    Position::addPosition(C, symbol_name, account_id_str, num_share);
-  }
-  else {
-    int old_amount = Position::getSymbolAmount(C, account_id_str, symbol_name);
-    Position::setSymbolAmount(C, account_id_str, symbol_name, old_amount + num_share);
-  }
+  // Account exists, insert new position or update existing position
+  Position::addPosition(C, symbol_name, account_id_str, num_share);
 
   std::stringstream response;
   response << "  <created ";
@@ -532,13 +528,10 @@ const std::string cancel(connection * C,
     return header + getTransIDError(trans_id_str, "Transaction doesn't exist") + tailer;
   }
 
-  // Transaction exists, check whether if can cancel
-  if (Transaction::isTransCompleted(C, trans_id)) {
+  // Transaction exists, cancel if not completed
+  if (!Transaction::cancelTransaction(C, trans_id)) {
     return header + getTransIDError(trans_id_str, "Transaction cannot be canceled") + tailer;
   }
-
-  // Can cancel, do it
-  Transaction::cancelTransaction(C, trans_id);
 
   int canceledShares = Transaction::getCanceledShares(C, trans_id);
   long canceledTime = Transaction::getCanceledTime(C, trans_id);
