@@ -62,6 +62,8 @@ class Transaction
   static void setCanceledTime(connection * C, int trans_id, long time);
 
   static const std::string queryExecuted(connection * C, int trans_id);
+
+  static const std::string doQuery(connection * C, int trans_id);
 };
 
 #endif

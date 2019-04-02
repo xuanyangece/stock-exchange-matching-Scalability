@@ -579,35 +579,12 @@ const std::string query(connection * C,
     return header + getTransIDError(trans_id_str, "Transaction doesn't exist") + tailer;
   }
 
-  // Three components
-  std::stringstream openSharesResponse;
-  std::stringstream canceledResponse;
-  std::stringstream executedResponse;
-
-  // Get open shares if still has open remaining
-  int openShares = Transaction::getOpenShares(C, trans_id);
-  if (openShares != 0) {  // !!!!!!!!!!! buy & sell
-    openSharesResponse << "    <open shares=\"" << openShares << "\"/>\n";
-  }
-
-  // Get cancel shares if it has been canceled
-  if (Transaction::isTransCanceled(C, trans_id)) {
-    int canceledShares = Transaction::getCanceledShares(C, trans_id);
-    long canceledTime = Transaction::getCanceledTime(C, trans_id);
-
-    canceledResponse << "    <canceled ";
-    canceledResponse << "shares=\"" << canceledShares << "\" ";
-    canceledResponse << "time=\"" << canceledTime << "\"/>\n";
-  }
-
-  // Get all executed transactions
-  executedResponse << Transaction::queryExecuted(C, trans_id);
+  // Get atomic query result
+  std::string result = Transaction::doQuery(C, trans_id);
 
   std::stringstream response;
   response << header;  // First line
-  response << openSharesResponse.str();
-  response << canceledResponse.str();
-  response << executedResponse.str();
+  response << result;
   response << tailer;  // Last line
   return response.str();
 }
