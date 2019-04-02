@@ -123,3 +123,13 @@ bool Account::reduceBalance(connection * C, const string & account_id, double pa
 
   return true;
 }
+
+void Account::addBalance(work & W, const string & account_id, double payment) {
+  std::stringstream sql;
+  sql << "UPDATE ACCOUNT SET BALANCE = ACCOUNT.BALANCE + ";
+  sql << W.quote(payment) << " ";
+  sql << "WHERE ACCOUNT_ID = ";
+  sql << W.quote(account_id) << ";";
+
+  W.exec(sql.str());
+}

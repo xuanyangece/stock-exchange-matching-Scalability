@@ -147,3 +147,20 @@ bool Position::reduceSymbolAmount(connection * C,
 
   return true;
 }
+
+void Position::addSymbolAmount(work & W,
+                               const string & account_id,
+                               const string & symbol_name,
+                               int requiredAmount) {
+  std::stringstream sql;
+  sql << "Insert INTO POSITION (SYMBOL_NAME, ACCOUNT_ID, NUM_SHARE) ";
+  sql << "VALUES (";
+  sql << W.quote(symbol_name) << ", ";
+  sql << W.quote(account_id) << ", ";
+  sql << W.quote(requiredAmount) << ") ";
+  sql << "ON CONFLICT ON CONSTRAINT POSITION_PKEY ";
+  sql << "DO UPDATE SET NUM_SHARE = POSITION.NUM_SHARE + ";
+  sql << W.quote(requiredAmount) << ";";
+
+  W.exec(sql.str());
+}

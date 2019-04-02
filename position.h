@@ -39,6 +39,11 @@ class Position
                                  const string & account_id,
                                  const string & symbol_name,
                                  int requiredAmount);
+
+  static void addSymbolAmount(work & W,
+                              const string & account_id,
+                              const string & symbol_name,
+                              int requiredAmount);
 };
 
 #endif

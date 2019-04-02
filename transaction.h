@@ -55,7 +55,11 @@ class Transaction
 
   static int getOpenShares(connection * C, int trans_id);
 
+  static int getOpenSharesByWork(work & W, int trans_id);
+
   static void setOpenShares(connection * C, int trans_id, int amount);
+
+  static void setOpenSharesByWork(work & W, int trans_id, int amount);
 
   static void setCanceledShares(connection * C, int trans_id, int amount);
 

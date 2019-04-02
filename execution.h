@@ -30,6 +30,12 @@ class Execution
                            int seller_trans_id,
                            int amount,
                            double price);
+
+  static void addExecutionByWork(work & W,
+                                 int buyer_trans_id,
+                                 int seller_trans_id,
+                                 int amount,
+                                 double price);
 };
 
 #endif
