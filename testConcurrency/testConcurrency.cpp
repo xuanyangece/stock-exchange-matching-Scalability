@@ -73,10 +73,6 @@ int main(int argc, char **argv) {
     std::cout << e.what() << std::endl;
   }
 
-  //  for (int i = 0; i < times; i++) {
-  //  threads[i].join();
-  // }
-
   while (1) {
     // for detach
   }
@@ -98,7 +94,8 @@ void sendRequest(int curt, int all) {
   /* generate secret number between 1 and 10: */
   int iSecret = distr(eng);
 
-  if (iSecret <= 3) { // create
+  // <= 3
+  if (iSecret <= 10) { // create
     request = create();
   } else { // transaction
     request = transactions();
@@ -178,13 +175,16 @@ string create() {
 
     int balance = distr(eng);
 
-    if (option <= 5) { // create
-      int id = distr(eng) % 5;
+    // <= 5
+    if (option <= 4) { // create
+      // % 5
+      int id = distr(eng) % 3;
 
       ss << account(account_ids[id], balance);
     } else { // transaction
       int name = distr(eng) % 5;
-      int id = distr(eng) % 5;
+      // % 5
+      int id = distr(eng) % 3;
       int num = distr(eng) % 200;
 
       ss << symbol(items[name], account_ids[id], num);
