@@ -11,12 +11,12 @@
 #define AMOUNT "amount"
 #define LIMIT "limit"
 
-/*                                                                   
+/*
     Receive XML from client and keep connection until invalid format.
 */
 void handleXML(int client_fd) {
   // Allocate & initialize a Postgres connection object
-  connection * C = createConnection();
+  connection *C = createConnection();
   if (C == NULL) {
     return;
   }
@@ -48,8 +48,7 @@ void handleXML(int client_fd) {
     if (DEBUG)
       std::cout << "create request received.\n\n";
     response = create(C, xml);
-  }
-  else if (xml.find("<transactions") != std::string::npos) {
+  } else if (xml.find("<transactions") != std::string::npos) {
     if (DEBUG)
       std::cout << "transaction request received.\n\n";
     response = transactions(C, xml);
@@ -58,8 +57,10 @@ void handleXML(int client_fd) {
   if (DEBUG)
     std::cout << "Response back: \n" << response << std::endl;
 
+  std::string finalres = std::to_string(response.size()) + "\n" + response;
+
   // Response back
-  send(client_fd, response.c_str(), response.length(), MSG_NOSIGNAL);
+  send(client_fd, finalres.c_str(), finalres.length(), MSG_NOSIGNAL);
 
   // Close database connection
   C->disconnect();
@@ -69,25 +70,24 @@ void handleXML(int client_fd) {
   close(client_fd);
 }
 
-/*                                            
+/*
     Create a new connection with the database.
 */
-connection * createConnection() {
-  connection * C;
+connection *createConnection() {
+  connection *C;
 
   try {
     // Establish a connection to the database
     // Parameters: database name, user name, user password
-    C = new connection("dbname=MARKET_XUAN_KAI user=postgres password=passw0rd");
+    C = new connection(
+        "dbname=MARKET_XUAN_KAI user=postgres password=passw0rd");
     if (C->is_open()) {
       // cout << "Opened database successfully: " << C->dbname() << endl;
-    }
-    else {
+    } else {
       std::cout << "Can't open database" << std::endl;
       return NULL;
     }
-  }
-  catch (const std::exception & e) {
+  } catch (const std::exception &e) {
     std::cerr << e.what() << std::endl;
     return NULL;
   }
@@ -95,17 +95,18 @@ connection * createConnection() {
   return C;
 }
 
-/*                                              
+/*
     Parse create and dispatch different request.
 */
-const std::string create(connection * C, std::string xml) {
+const std::string create(connection *C, std::string xml) {
   // Response string to return
   std::stringstream ans;
   ans << "<results>\n";
 
   // Parse by line, greedy
   while (1) {
-    // Get line by line break's position, xml stands for the remaining content to be parsed
+    // Get line by line break's position, xml stands for the remaining content
+    // to be parsed
     size_t linebreak = xml.find('\n');
     if (linebreak == std::string::npos)
       break;
@@ -122,22 +123,21 @@ const std::string create(connection * C, std::string xml) {
 
       // Skip one line
       xml = xml.substr(linebreak + 1);
-    }
-    else if (line.find("symbol") != std::string::npos) {
+    } else if (line.find("symbol") != std::string::npos) {
       // Create symbol: need to parse the whole symbol tag
       std::string symbol = getAttribute(line, SYM);
 
       // Get the info inside symbol tag
-      size_t start = xml.find('\n') + 1;   // skip the <symbol ...> line
-      size_t end = xml.find("</symbol>");  // end before </symbol>, containing line break!
+      size_t start = xml.find('\n') + 1; // skip the <symbol ...> line
+      size_t end =
+          xml.find("</symbol>"); // end before </symbol>, containing line break!
       std::string accounts = xml.substr(start, end - start);
 
       singleResponse = parseSymbol(C, accounts, symbol);
 
       // Skip the entire symbol tag
       xml = xml.substr(end + 10);
-    }
-    else {
+    } else {
       // Otherwise skip one line
       xml = xml.substr(linebreak + 1);
     }
@@ -149,8 +149,8 @@ const std::string create(connection * C, std::string xml) {
   return ans.str();
 }
 
-/*                                           
-    Access attribute from giving string.     
+/*
+    Access attribute from giving string.
     In our design, it accesses the first one.
 */
 const std::string getAttribute(std::string remain, std::string attribute) {
@@ -162,8 +162,7 @@ const std::string getAttribute(std::string remain, std::string attribute) {
     while (remain[pos] != '<') {
       ans += remain[pos++];
     }
-  }
-  else {
+  } else {
     size_t pos = remain.find(attribute);
 
     // try to find open parenthesis
@@ -171,7 +170,7 @@ const std::string getAttribute(std::string remain, std::string attribute) {
       pos++;
     }
 
-    pos++;  // skip open parenthesis
+    pos++; // skip open parenthesis
 
     while (remain[pos] != '\"') {
       ans += remain[pos++];
@@ -181,18 +180,19 @@ const std::string getAttribute(std::string remain, std::string attribute) {
   return ans;
 }
 
-/*                                                                  
-    Parse the entire symbol body:                                   
+/*
+    Parse the entire symbol body:
     Do greedy to find all acounts and number of symbols to be added.
 */
-const std::string parseSymbol(connection * C, std::string accounts, std::string symbol) {
+const std::string parseSymbol(connection *C, std::string accounts,
+                              std::string symbol) {
   std::stringstream ans;
 
   // Basically access each line and call createSymbol
   while (true) {
     size_t linebreak = accounts.find('\n');
     if (linebreak == std::string::npos)
-      break;  // end of parsing
+      break; // end of parsing
 
     std::string id = getAttribute(accounts, ID);
     std::string amount = getAttribute(accounts, NUM);
@@ -205,10 +205,10 @@ const std::string parseSymbol(connection * C, std::string accounts, std::string 
   return ans.str();
 }
 
-/*                                                    
+/*
     Parse transactions and dispatch different request.
 */
-const std::string transactions(connection * C, std::string xml) {
+const std::string transactions(connection *C, std::string xml) {
   // Response string to return
   std::stringstream ans;
   ans << "<results>\n";
@@ -216,7 +216,7 @@ const std::string transactions(connection * C, std::string xml) {
   // Access account ID at first and get all requests
   std::string account_id = getAttribute(xml, ID);
 
-  size_t start = xml.find('\n') + 1;  // // skip the <transactions ...> line
+  size_t start = xml.find('\n') + 1; // // skip the <transactions ...> line
   size_t end = xml.find("</transactions>");
 
   std::string requests = xml.substr(start, end - start);
@@ -231,7 +231,8 @@ const std::string transactions(connection * C, std::string xml) {
   bool space = false;
   // Parse line by line: greedy
   while (1) {
-    // Get line by linebreak's position, xml stands for the remaining content to be parsed
+    // Get line by linebreak's position, xml stands for the remaining content to
+    // be parsed
     size_t linebreak = requests.find('\n');
 
     if (linebreak == std::string::npos)
@@ -254,16 +255,14 @@ const std::string transactions(connection * C, std::string xml) {
       singleResponse = order(C, account_id, symbol, amount, limit);
       if (DEBUG)
         std::cout << "Single order response" << singleResponse << std::endl;
-    }
-    else if (line.find("query") != std::string::npos) {
+    } else if (line.find("query") != std::string::npos) {
       // Access trans_id
       std::string trans_id = getAttribute(line, ID);
 
       singleResponse = query(C, account_id, trans_id);
       if (DEBUG)
         std::cout << "Single query response" << singleResponse << std ::endl;
-    }
-    else if (line.find("cancel") != std::string::npos) {
+    } else if (line.find("cancel") != std::string::npos) {
       // Access trans_id
       std::string trans_id = getAttribute(line, ID);
 
@@ -283,12 +282,12 @@ const std::string transactions(connection * C, std::string xml) {
   return ans.str();
 }
 
-/*                                  
+/*
     Create account, return response.
 */
-const std::string createAccount(connection * C,
-                                const std::string & account_id_str,
-                                const std::string & balance_str) {
+const std::string createAccount(connection *C,
+                                const std::string &account_id_str,
+                                const std::string &balance_str) {
   // Check if account is all digits
   if (!isDigits(account_id_str)) {
     return getCreateAccountError(account_id_str, "Account is not all digits");
@@ -296,7 +295,8 @@ const std::string createAccount(connection * C,
 
   // Check if balance is double
   if (!isPositiveDouble(balance_str)) {
-    return getCreateAccountError(account_id_str, "Balance is not a positive decimal number");
+    return getCreateAccountError(account_id_str,
+                                 "Balance is not a positive decimal number");
   }
 
   double balance;
@@ -316,10 +316,10 @@ const std::string createAccount(connection * C,
   return response.str();
 }
 
-/*                                           
+/*
     Check whether given string is all digits.
 */
-bool isDigits(const std::string & str) {
+bool isDigits(const std::string &str) {
   if (str.empty()) {
     return false;
   }
@@ -333,10 +333,10 @@ bool isDigits(const std::string & str) {
   return true;
 }
 
-/*                                                                            
+/*
     Check whether given string is alphanumeric to fit the symbol name pattern.
 */
-bool isAlphaDigits(const std::string & str) {
+bool isAlphaDigits(const std::string &str) {
   if (str.empty()) {
     return false;
   }
@@ -350,10 +350,10 @@ bool isAlphaDigits(const std::string & str) {
   return true;
 }
 
-/*                                                          
+/*
     Check whether given string represents a positive double.
 */
-bool isPositiveDouble(const std::string & str) {
+bool isPositiveDouble(const std::string &str) {
   double result;
   std::stringstream ss(str);
 
@@ -362,10 +362,10 @@ bool isPositiveDouble(const std::string & str) {
   return !ss.fail() && ss.eof() && result > 0;
 }
 
-/*                                                           
+/*
     Check whether given string represents a non-zero integer.
 */
-bool isNonZeroInt(const std::string & str) {
+bool isNonZeroInt(const std::string &str) {
   int result;
   std::stringstream ss(str);
 
@@ -374,11 +374,11 @@ bool isNonZeroInt(const std::string & str) {
   return !ss.fail() && ss.eof() && result != 0;
 }
 
-/*                                  
+/*
     Return error related to account.
 */
-const std::string getCreateAccountError(const std::string & account_id_str,
-                                        const std::string & msg) {
+const std::string getCreateAccountError(const std::string &account_id_str,
+                                        const std::string &msg) {
   std::stringstream response;
 
   response << "  <error ";
@@ -389,26 +389,28 @@ const std::string getCreateAccountError(const std::string & account_id_str,
   return response.str();
 }
 
-/*                                                               
+/*
     Create a symbol associated with the account, return response.
 */
-const std::string createSymbol(connection * C,
-                               const std::string & account_id_str,
-                               const std::string & symbol_name,
-                               const std::string & num_share_str) {
+const std::string createSymbol(connection *C, const std::string &account_id_str,
+                               const std::string &symbol_name,
+                               const std::string &num_share_str) {
   // Check if symbol is alphanumeric
   if (!isAlphaDigits(symbol_name)) {
-    return getCreateSymbolError(account_id_str, symbol_name, "Symbol is not alphanumeric");
+    return getCreateSymbolError(account_id_str, symbol_name,
+                                "Symbol is not alphanumeric");
   }
 
   // Check if account is all digits
   if (!isDigits(account_id_str)) {
-    return getCreateSymbolError(account_id_str, symbol_name, "Account is not all digits");
+    return getCreateSymbolError(account_id_str, symbol_name,
+                                "Account is not all digits");
   }
 
   // Check if amount is a positive integer
   if (!isDigits(num_share_str) || num_share_str[0] == '0') {
-    return getCreateSymbolError(account_id_str, symbol_name, "Amount is not a positive integer");
+    return getCreateSymbolError(account_id_str, symbol_name,
+                                "Amount is not a positive integer");
   }
 
   int num_share;
@@ -419,7 +421,8 @@ const std::string createSymbol(connection * C,
 
   // Check if account already exists
   if (!Account::isAccountExists(C, account_id_str)) {
-    return getCreateSymbolError(account_id_str, symbol_name, "Account doesn't exist");
+    return getCreateSymbolError(account_id_str, symbol_name,
+                                "Account doesn't exist");
   }
 
   // Account exists, insert new position or update existing position
@@ -432,12 +435,12 @@ const std::string createSymbol(connection * C,
   return response.str();
 }
 
-/*                                 
+/*
     Return error related to symbol.
 */
-const std::string getCreateSymbolError(const std::string & account_id_str,
-                                       const std::string & symbol_name,
-                                       const std::string & msg) {
+const std::string getCreateSymbolError(const std::string &account_id_str,
+                                       const std::string &symbol_name,
+                                       const std::string &msg) {
   std::stringstream response;
 
   response << "  <error ";
@@ -449,14 +452,13 @@ const std::string getCreateSymbolError(const std::string & account_id_str,
   return response.str();
 }
 
-/*                                        
+/*
     Handle order request, return response.
 */
-const std::string order(connection * C,
-                        const std::string & account_id_str,
-                        const std::string & symbol,
-                        const std::string & amount_str,
-                        const std::string & limit_str) {
+const std::string order(connection *C, const std::string &account_id_str,
+                        const std::string &symbol,
+                        const std::string &amount_str,
+                        const std::string &limit_str) {
   // Step 1: Check format
   // account_id(digits)
   // symbol(AlphaDigits)
@@ -465,17 +467,20 @@ const std::string order(connection * C,
 
   // Check if account is all digits
   if (!isDigits(account_id_str)) {
-    return getOrderError(symbol, amount_str, limit_str, "Account_id is not all digits");
+    return getOrderError(symbol, amount_str, limit_str,
+                         "Account_id is not all digits");
   }
 
   // Check if symbol is alphanumeric
   if (!isAlphaDigits(symbol)) {
-    return getOrderError(symbol, amount_str, limit_str, "Symbol is not alphanumeric");
+    return getOrderError(symbol, amount_str, limit_str,
+                         "Symbol is not alphanumeric");
   }
 
   // Check if amount is non-zero integer
   if (!isNonZeroInt(amount_str)) {
-    return getOrderError(symbol, amount_str, limit_str, "Amount is not non-zero integer");
+    return getOrderError(symbol, amount_str, limit_str,
+                         "Amount is not non-zero integer");
   }
 
   // Check if limit is positive double
@@ -497,7 +502,8 @@ const std::string order(connection * C,
 
   // Check if account exists
   if (!Account::isAccountExists(C, account_id_str)) {
-    return getOrderError(symbol, amount_str, limit_str, "Account doesn't exist");
+    return getOrderError(symbol, amount_str, limit_str,
+                         "Account doesn't exist");
   }
 
   // Buy: check if account has enough amount * limit balance
@@ -505,20 +511,21 @@ const std::string order(connection * C,
     double requiredBalance = amount * limit;
 
     if (!Account::reduceBalance(C, account_id_str, requiredBalance)) {
-      return getOrderError(
-          symbol, amount_str, limit_str, "Account doesn't have enough balance to buy");
+      return getOrderError(symbol, amount_str, limit_str,
+                           "Account doesn't have enough balance to buy");
     }
   }
   // Sell: check if account has enough position as amount
-  else {  // amount < 0
+  else { // amount < 0
     if (!Position::reduceSymbolAmount(C, account_id_str, symbol, 0 - amount)) {
-      return getOrderError(
-          symbol, amount_str, limit_str, "Account doesn't have enough symbol to sell");
+      return getOrderError(symbol, amount_str, limit_str,
+                           "Account doesn't have enough symbol to sell");
     }
   }
 
   // Step 3: Create transaction
-  int trans_id = Transaction::addTransaction(C, account_id_str, symbol, limit, amount);
+  int trans_id =
+      Transaction::addTransaction(C, account_id_str, symbol, limit, amount);
 
   // Step 4: Match one possible at a time
   while (Transaction::tryMatch(C, trans_id)) {
@@ -534,12 +541,11 @@ const std::string order(connection * C,
   return response.str();
 }
 
-/*                                         
+/*
     Handle cancel request, return response.
 */
-const std::string cancel(connection * C,
-                         const std::string & account_id_str,
-                         const std::string & trans_id_str) {
+const std::string cancel(connection *C, const std::string &account_id_str,
+                         const std::string &trans_id_str) {
   const std::string header = "  <canceled id=\"" + trans_id_str + "\">\n";
   const std::string tailer = "  </canceled>\n";
 
@@ -566,12 +572,15 @@ const std::string cancel(connection * C,
 
   // Check whether transaction exists
   if (!Transaction::isTransExists(C, trans_id)) {
-    return header + getTransIDError(trans_id_str, "Transaction doesn't exist") + tailer;
+    return header + getTransIDError(trans_id_str, "Transaction doesn't exist") +
+           tailer;
   }
 
   // Transaction exists, cancel if not completed
   if (!Transaction::cancelTransaction(C, trans_id)) {
-    return header + getTransIDError(trans_id_str, "Transaction cannot be canceled") + tailer;
+    return header +
+           getTransIDError(trans_id_str, "Transaction cannot be canceled") +
+           tailer;
   }
 
   int canceledShares = Transaction::getCanceledShares(C, trans_id);
@@ -579,32 +588,34 @@ const std::string cancel(connection * C,
   std::string allExecuted = Transaction::queryExecuted(C, trans_id);
 
   std::stringstream response;
-  response << header;  // First line
+  response << header; // First line
   response << "    <canceled ";
   response << "shares=\"" << canceledShares << "\" ";
   response << "time=\"" << canceledTime << "\"/>\n";
   response << allExecuted;
-  response << tailer;  // Last line
+  response << tailer; // Last line
   return response.str();
 }
 
-/*                                        
+/*
     Handle query request, return response.
 */
-const std::string query(connection * C,
-                        const std::string & account_id_str,
-                        const std::string & trans_id_str) {
+const std::string query(connection *C, const std::string &account_id_str,
+                        const std::string &trans_id_str) {
   const std::string header = "  <status id=\"" + trans_id_str + "\">\n";
   const std::string tailer = "  </status>\n";
 
   // Check if account is all digits
   if (!isDigits(account_id_str)) {
-    return header + getCreateAccountError(account_id_str, "Account is not all digits") + tailer;
+    return header +
+           getCreateAccountError(account_id_str, "Account is not all digits") +
+           tailer;
   }
 
   // Check if trans_id is all digits
   if (!isDigits(trans_id_str)) {
-    return header + getTransIDError(trans_id_str, "Trans_id is not all digits") + tailer;
+    return header +
+           getTransIDError(trans_id_str, "Trans_id is not all digits") + tailer;
   }
 
   // Check if account exists
@@ -620,23 +631,25 @@ const std::string query(connection * C,
 
   // Check whether transaction exists
   if (!Transaction::isTransExists(C, trans_id)) {
-    return header + getTransIDError(trans_id_str, "Transaction doesn't exist") + tailer;
+    return header + getTransIDError(trans_id_str, "Transaction doesn't exist") +
+           tailer;
   }
 
   // Get atomic query result
   std::string result = Transaction::doQuery(C, trans_id);
 
   std::stringstream response;
-  response << header;  // First line
+  response << header; // First line
   response << result;
-  response << tailer;  // Last line
+  response << tailer; // Last line
   return response.str();
 }
 
-/*                                   
+/*
     Return error related to trans_id.
 */
-const std::string getTransIDError(const std::string & trans_id_str, const std::string & msg) {
+const std::string getTransIDError(const std::string &trans_id_str,
+                                  const std::string &msg) {
   std::stringstream response;
 
   response << "    <error ";
@@ -647,13 +660,13 @@ const std::string getTransIDError(const std::string & trans_id_str, const std::s
   return response.str();
 }
 
-/*                                
+/*
     Return error related to order.
 */
-const std::string getOrderError(const std::string & symbol_name,
-                                const std::string & amount,
-                                const std::string & limit,
-                                const std::string & msg) {
+const std::string getOrderError(const std::string &symbol_name,
+                                const std::string &amount,
+                                const std::string &limit,
+                                const std::string &msg) {
   std::stringstream response;
 
   response << "  <error ";
@@ -666,7 +679,7 @@ const std::string getOrderError(const std::string & symbol_name,
   return response.str();
 }
 
-/*                                           
+/*
     Helper function to get current timestamp.
 */
 long getEpoch() {
