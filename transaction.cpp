@@ -8,6 +8,7 @@
 
 using std::string;
 
+/* Create the table without foreign keys */
 void Transaction::createTable(connection * C) {
   string dropExistingTableSql = "DROP TABLE IF EXISTS TRANSACTION CASCADE;";
 
@@ -33,7 +34,7 @@ void Transaction::buildForeignKeys(connection * C) {
   Table::buildForeignKeys(C, buildForeignKeysSql);
 }
 
-/* Add a new entry to the table */
+/* Add a new entry to the table, return the transaction_id */
 int Transaction::addTransaction(connection * C,
                                 const string & account_id,
                                 const string & symbol_name,
@@ -60,6 +61,7 @@ int Transaction::addTransaction(connection * C,
   return R[0][0].as<int>();
 }
 
+/* Check if the given transaction already exists */
 bool Transaction::isTransExists(connection * C, int trans_id) {
   /* Create a non-transactional object. */
   nontransaction N(*C);
@@ -75,6 +77,7 @@ bool Transaction::isTransExists(connection * C, int trans_id) {
   return R.size() != 0;
 }
 
+/* Check if the given transaction is completed: matched/canceled */
 bool Transaction::isTransCompleted(connection * C, int trans_id) {
   /* Create a non-transactional object. */
   nontransaction N(*C);
@@ -90,6 +93,7 @@ bool Transaction::isTransCompleted(connection * C, int trans_id) {
   return R[0][0].as<int>() == 0;
 }
 
+/* Check if the given transaction is canceled */
 bool Transaction::isTransCanceled(connection * C, int trans_id) {
   /* Create a non-transactional object. */
   nontransaction N(*C);
@@ -105,6 +109,7 @@ bool Transaction::isTransCanceled(connection * C, int trans_id) {
   return R[0][0].as<int>() != 0;
 }
 
+/* Get the cancel_time of the given trans_id */
 long Transaction::getCanceledTime(connection * C, int trans_id) {
   /* Create a non-transactional object. */
   nontransaction N(*C);
@@ -120,6 +125,7 @@ long Transaction::getCanceledTime(connection * C, int trans_id) {
   return R[0][0].as<long>();
 }
 
+/* Get the number of canceled shares of the given trans_id */
 int Transaction::getCanceledShares(connection * C, int trans_id) {
   /* Create a non-transactional object. */
   nontransaction N(*C);
@@ -135,6 +141,7 @@ int Transaction::getCanceledShares(connection * C, int trans_id) {
   return R[0][0].as<int>();
 }
 
+/* Get the number of open shares of the given trans_id */
 int Transaction::getOpenShares(connection * C, int trans_id) {
   /* Create a non-transactional object. */
   nontransaction N(*C);
@@ -150,6 +157,8 @@ int Transaction::getOpenShares(connection * C, int trans_id) {
   return R[0][0].as<int>();
 }
 
+/* Get the number of canceled shares of the given trans_id
+   The parameter is work &, so it's part of another transaction */
 int Transaction::getOpenSharesByWork(work & W, int trans_id) {
   /* Create SQL statement */
   std::stringstream sql;
@@ -162,6 +171,7 @@ int Transaction::getOpenSharesByWork(work & W, int trans_id) {
   return R[0][0].as<int>();
 }
 
+/* Get the account_id of the given trans_id */
 string Transaction::getAccountID(connection * C, int trans_id) {
   /* Create a non-transactional object. */
   nontransaction N(*C);
@@ -177,6 +187,7 @@ string Transaction::getAccountID(connection * C, int trans_id) {
   return R[0][0].as<string>();
 }
 
+/* Get the limited price of the given trans_id */
 double Transaction::getLimited(connection * C, int trans_id) {
   /* Create a non-transactional object. */
   nontransaction N(*C);
@@ -192,6 +203,7 @@ double Transaction::getLimited(connection * C, int trans_id) {
   return R[0][0].as<double>();
 }
 
+/* Get the symbol_name of the given trans_id */
 string Transaction::getSymbolName(connection * C, int trans_id) {
   /* Create a non-transactional object. */
   nontransaction N(*C);
@@ -207,6 +219,7 @@ string Transaction::getSymbolName(connection * C, int trans_id) {
   return R[0][0].as<string>();
 }
 
+/* Query the executions associated with the given transaction */
 const std::string Transaction::queryExecuted(connection * C, int trans_id) {
   /* Create a non-transactional object. */
   nontransaction N(*C);
@@ -238,8 +251,7 @@ const std::string Transaction::queryExecuted(connection * C, int trans_id) {
   return ss.str();
 }
 
-// void Transaction::queryTransaction() {}
-
+/* Cancel a transaction, return true if succeed */
 bool Transaction::cancelTransaction(connection * C, int trans_id) {
   /* Create a transactional object. */
   work W1(*C);
@@ -316,34 +328,31 @@ bool Transaction::cancelTransaction(connection * C, int trans_id) {
   return true;
 }
 
+/* Set the number of open shares of the given trans_id */
 void Transaction::setOpenShares(connection * C, int trans_id, int amount) {
   /* Create a non-transactional object. */
   work W(*C);
 
-  /* Create SQL statement */
-  std::stringstream sql;
-  sql << "UPDATE TRANSACTION SET NUM_OPEN=";
-  sql << W.quote(amount) << " ";
-  sql << "WHERE TRANSACTION_ID=";
-  sql << W.quote(trans_id) << ";";
+  Transaction::setOpenSharesByWork(W, trans_id, amount);
 
-  /* Execute SQL query */
-  W.exec(sql.str());
   W.commit();
 }
 
+/* Set the number of open shares of the given trans_id            
+   The parameter is work &, so it's part of another transaction */
 void Transaction::setOpenSharesByWork(work & W, int trans_id, int amount) {
   /* Create SQL statement */
   std::stringstream sql;
-  sql << "UPDATE TRANSACTION SET NUM_OPEN=";
+  sql << "UPDATE TRANSACTION SET NUM_OPEN = ";
   sql << W.quote(amount) << " ";
-  sql << "WHERE TRANSACTION_ID=";
+  sql << "WHERE TRANSACTION_ID = ";
   sql << W.quote(trans_id) << ";";
 
   /* Execute SQL query */
   W.exec(sql.str());
 }
 
+/* Set the number of canceled shares of the given trans_id */
 void Transaction::setCanceledShares(connection * C, int trans_id, int amount) {
   /* Create a non-transactional object. */
   work W(*C);
@@ -360,6 +369,7 @@ void Transaction::setCanceledShares(connection * C, int trans_id, int amount) {
   W.commit();
 }
 
+/* Get the canceled time of the given trans_id */
 void Transaction::setCanceledTime(connection * C, int trans_id, long time) {
   /* Create a non-transactional object. */
   work W(*C);
@@ -376,6 +386,8 @@ void Transaction::setCanceledTime(connection * C, int trans_id, long time) {
   W.commit();
 }
 
+/* Try to match a transaction,                             
+   return true if another matching can still be achieved */
 bool Transaction::tryMatch(connection * C, int trans_id) {
   // Add mutex
   MyLock lk(&mymutex);
@@ -508,6 +520,7 @@ bool Transaction::tryMatch(connection * C, int trans_id) {
   return true;
 }
 
+/* Query the given transaction, return the response xml */
 const std::string Transaction::doQuery(connection * C, int trans_id) {
   std::stringstream response;
 

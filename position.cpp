@@ -7,6 +7,7 @@
 
 using std::string;
 
+/* Create the table without foreign keys */
 void Position::createTable(connection * C) {
   string dropExistingTableSql = "DROP TABLE IF EXISTS POSITION CASCADE;";
 
@@ -52,6 +53,7 @@ void Position::addPosition(connection * C,
   W.commit();
 }
 
+/* Check if the given symbol already exists */
 bool Position::isSymbolExists(connection * C,
                               const string & account_id,
                               const string & symbol_name) {
@@ -70,6 +72,7 @@ bool Position::isSymbolExists(connection * C,
   return R.size() != 0;
 }
 
+/* Get the symbol amount of the given account_id and symbol_name */
 int Position::getSymbolAmount(connection * C,
                               const string & account_id,
                               const string & symbol_name) {
@@ -91,6 +94,7 @@ int Position::getSymbolAmount(connection * C,
   return R[0][0].as<int>();
 }
 
+/* Set the symbol amount of the given account_id and symbol_name */
 void Position::setSymbolAmount(connection * C,
                                const string & account_id,
                                const string & symbol_name,
@@ -111,12 +115,14 @@ void Position::setSymbolAmount(connection * C,
   W.commit();
 }
 
+/* Reduce the symbol amount of the given position atomically */
 bool Position::reduceSymbolAmount(connection * C,
                                   const string & account_id,
                                   const string & symbol_name,
                                   int requiredAmount) {
   work W(*C);
 
+  // Read
   std::stringstream sql1;
   sql1 << "SELECT NUM_SHARE FROM POSITION WHERE ACCOUNT_ID = ";
   sql1 << W.quote(account_id) << " ";
@@ -127,6 +133,7 @@ bool Position::reduceSymbolAmount(connection * C,
     return false;
   }
 
+  // Modify
   int num_share = R[0]["NUM_SHARE"].as<int>();
   int remain = num_share - requiredAmount;
 
@@ -135,6 +142,7 @@ bool Position::reduceSymbolAmount(connection * C,
     return false;
   }
 
+  // Write
   std::stringstream sql2;
   sql2 << "UPDATE POSITION SET NUM_SHARE = ";
   sql2 << W.quote(remain) << " ";
@@ -148,6 +156,7 @@ bool Position::reduceSymbolAmount(connection * C,
   return true;
 }
 
+/* Add the symbol amount of the given position atomically */
 void Position::addSymbolAmount(work & W,
                                const string & account_id,
                                const string & symbol_name,

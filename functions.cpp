@@ -1,6 +1,6 @@
 #include "functions.h"
 
-#define DEBUG 1
+#define DEBUG 0
 #define BUFFSIZE 40960
 
 // All for fixed string
@@ -11,24 +11,13 @@
 #define AMOUNT "amount"
 #define LIMIT "limit"
 
-void handleXML(connection * C1, int client_fd) {
+/*                                                                   
+    Receive XML from client and keep connection until invalid format.
+*/
+void handleXML(int client_fd) {
   // Allocate & initialize a Postgres connection object
-  connection * C;
-
-  try {
-    // Establish a connection to the database
-    // Parameters: database name, user name, user password
-    C = new connection("dbname=MARKET_XUAN_KAI user=postgres password=passw0rd");
-    if (C->is_open()) {
-      // cout << "Opened database successfully: " << C->dbname() << endl;
-    }
-    else {
-      std::cout << "Can't open database" << std::endl;
-      return;
-    }
-  }
-  catch (const std::exception & e) {
-    std::cerr << e.what() << std::endl;
+  connection * C = createConnection();
+  if (C == NULL) {
     return;
   }
 
@@ -80,10 +69,35 @@ void handleXML(connection * C1, int client_fd) {
   close(client_fd);
 }
 
-const connection * createConnection() {
-  return NULL;
+/*                                            
+    Create a new connection with the database.
+*/
+connection * createConnection() {
+  connection * C;
+
+  try {
+    // Establish a connection to the database
+    // Parameters: database name, user name, user password
+    C = new connection("dbname=MARKET_XUAN_KAI user=postgres password=passw0rd");
+    if (C->is_open()) {
+      // cout << "Opened database successfully: " << C->dbname() << endl;
+    }
+    else {
+      std::cout << "Can't open database" << std::endl;
+      return NULL;
+    }
+  }
+  catch (const std::exception & e) {
+    std::cerr << e.what() << std::endl;
+    return NULL;
+  }
+
+  return C;
 }
 
+/*                                              
+    Parse create and dispatch different request.
+*/
 const std::string create(connection * C, std::string xml) {
   // Response string to return
   std::stringstream ans;
@@ -135,6 +149,10 @@ const std::string create(connection * C, std::string xml) {
   return ans.str();
 }
 
+/*                                           
+    Access attribute from giving string.     
+    In our design, it accesses the first one.
+*/
 const std::string getAttribute(std::string remain, std::string attribute) {
   std::string ans;
 
@@ -163,6 +181,10 @@ const std::string getAttribute(std::string remain, std::string attribute) {
   return ans;
 }
 
+/*                                                                  
+    Parse the entire symbol body:                                   
+    Do greedy to find all acounts and number of symbols to be added.
+*/
 const std::string parseSymbol(connection * C, std::string accounts, std::string symbol) {
   std::stringstream ans;
 
@@ -183,6 +205,9 @@ const std::string parseSymbol(connection * C, std::string accounts, std::string 
   return ans.str();
 }
 
+/*                                                    
+    Parse transactions and dispatch different request.
+*/
 const std::string transactions(connection * C, std::string xml) {
   // Response string to return
   std::stringstream ans;
@@ -258,6 +283,9 @@ const std::string transactions(connection * C, std::string xml) {
   return ans.str();
 }
 
+/*                                  
+    Create account, return response.
+*/
 const std::string createAccount(connection * C,
                                 const std::string & account_id_str,
                                 const std::string & balance_str) {
@@ -288,6 +316,9 @@ const std::string createAccount(connection * C,
   return response.str();
 }
 
+/*                                           
+    Check whether given string is all digits.
+*/
 bool isDigits(const std::string & str) {
   if (str.empty()) {
     return false;
@@ -302,6 +333,9 @@ bool isDigits(const std::string & str) {
   return true;
 }
 
+/*                                                                            
+    Check whether given string is alphanumeric to fit the symbol name pattern.
+*/
 bool isAlphaDigits(const std::string & str) {
   if (str.empty()) {
     return false;
@@ -316,6 +350,9 @@ bool isAlphaDigits(const std::string & str) {
   return true;
 }
 
+/*                                                          
+    Check whether given string represents a positive double.
+*/
 bool isPositiveDouble(const std::string & str) {
   double result;
   std::stringstream ss(str);
@@ -325,6 +362,9 @@ bool isPositiveDouble(const std::string & str) {
   return !ss.fail() && ss.eof() && result > 0;
 }
 
+/*                                                           
+    Check whether given string represents a non-zero integer.
+*/
 bool isNonZeroInt(const std::string & str) {
   int result;
   std::stringstream ss(str);
@@ -334,6 +374,9 @@ bool isNonZeroInt(const std::string & str) {
   return !ss.fail() && ss.eof() && result != 0;
 }
 
+/*                                  
+    Return error related to account.
+*/
 const std::string getCreateAccountError(const std::string & account_id_str,
                                         const std::string & msg) {
   std::stringstream response;
@@ -346,6 +389,9 @@ const std::string getCreateAccountError(const std::string & account_id_str,
   return response.str();
 }
 
+/*                                                               
+    Create a symbol associated with the account, return response.
+*/
 const std::string createSymbol(connection * C,
                                const std::string & account_id_str,
                                const std::string & symbol_name,
@@ -386,6 +432,9 @@ const std::string createSymbol(connection * C,
   return response.str();
 }
 
+/*                                 
+    Return error related to symbol.
+*/
 const std::string getCreateSymbolError(const std::string & account_id_str,
                                        const std::string & symbol_name,
                                        const std::string & msg) {
@@ -400,6 +449,9 @@ const std::string getCreateSymbolError(const std::string & account_id_str,
   return response.str();
 }
 
+/*                                        
+    Handle order request, return response.
+*/
 const std::string order(connection * C,
                         const std::string & account_id_str,
                         const std::string & symbol,
@@ -482,6 +534,9 @@ const std::string order(connection * C,
   return response.str();
 }
 
+/*                                         
+    Handle cancel request, return response.
+*/
 const std::string cancel(connection * C,
                          const std::string & account_id_str,
                          const std::string & trans_id_str) {
@@ -533,6 +588,9 @@ const std::string cancel(connection * C,
   return response.str();
 }
 
+/*                                        
+    Handle query request, return response.
+*/
 const std::string query(connection * C,
                         const std::string & account_id_str,
                         const std::string & trans_id_str) {
@@ -575,6 +633,9 @@ const std::string query(connection * C,
   return response.str();
 }
 
+/*                                   
+    Return error related to trans_id.
+*/
 const std::string getTransIDError(const std::string & trans_id_str, const std::string & msg) {
   std::stringstream response;
 
@@ -586,6 +647,9 @@ const std::string getTransIDError(const std::string & trans_id_str, const std::s
   return response.str();
 }
 
+/*                                
+    Return error related to order.
+*/
 const std::string getOrderError(const std::string & symbol_name,
                                 const std::string & amount,
                                 const std::string & limit,
@@ -602,6 +666,9 @@ const std::string getOrderError(const std::string & symbol_name,
   return response.str();
 }
 
+/*                                           
+    Helper function to get current timestamp.
+*/
 long getEpoch() {
   std::stringstream ss;
   ss << duration_cast<seconds>(system_clock::now().time_since_epoch()).count();

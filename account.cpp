@@ -6,6 +6,7 @@
 
 using std::string;
 
+/* Create the table without foreign keys */
 void Account::createTable(connection * C) {
   string dropExistingTableSql = "DROP TABLE IF EXISTS ACCOUNT CASCADE;";
 
@@ -34,6 +35,7 @@ bool Account::addAccount(connection * C, const string & account_id, double balan
   sql << W.quote(account_id) << ", ";
   sql << W.quote(balance) << ");";
 
+  /* Execute SQL query */
   try {
     W.exec(sql.str());
     W.commit();
@@ -65,6 +67,7 @@ bool Account::isAccountExists(connection * C, const string & account_id) {
   return R.size() != 0;
 }
 
+/* Get the balance of the given account_id */
 double Account::getBalance(connection * C, const string & account_id) {
   /* Create a non-transactional object. */
   nontransaction N(*C);
@@ -80,6 +83,7 @@ double Account::getBalance(connection * C, const string & account_id) {
   return R[0][0].as<double>();
 }
 
+/* Set the balance of the given account_id */
 void Account::setBalance(connection * C, const string & account_id, double balance) {
   /* Create a non-transactional object. */
   work W(*C);
@@ -96,6 +100,7 @@ void Account::setBalance(connection * C, const string & account_id, double balan
   W.commit();
 }
 
+/* Reduce the balance of the given account_id atomically */
 bool Account::reduceBalance(connection * C, const string & account_id, double payment) {
   work W(*C);
 
@@ -118,12 +123,14 @@ bool Account::reduceBalance(connection * C, const string & account_id, double pa
   sql2 << "WHERE ACCOUNT_ID=";
   sql2 << W.quote(account_id) << ";";
 
+  /* Execute SQL query */
   W.exec(sql2.str());
   W.commit();
 
   return true;
 }
 
+/* Add the balance of the given account_id atomically */
 void Account::addBalance(work & W, const string & account_id, double payment) {
   std::stringstream sql;
   sql << "UPDATE ACCOUNT SET BALANCE = ACCOUNT.BALANCE + ";
@@ -131,5 +138,6 @@ void Account::addBalance(work & W, const string & account_id, double payment) {
   sql << "WHERE ACCOUNT_ID = ";
   sql << W.quote(account_id) << ";";
 
+  /* Execute SQL query */
   W.exec(sql.str());
 }

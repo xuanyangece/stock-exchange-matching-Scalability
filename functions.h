@@ -46,9 +46,12 @@ class MyLock
 /*
     Receive XML from client and keep connection until invalid format.
 */
-void handleXML(connection * C, int client_fd);  // parse
+void handleXML(int client_fd);  // parse
 
-const connection * createConnection();
+/*
+    Create a new connection with the database.
+*/
+connection * createConnection();
 
 /*
     Parse create and dispatch different request.

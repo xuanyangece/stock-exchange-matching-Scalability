@@ -9,7 +9,7 @@
 #include "table.h"
 #include "transaction.h"
 
-#define DEVELOPMENT 1  // Development or production
+#define DEVELOPMENT 0  // Development or production
 #define PORT "12345"   // Default port 12345 as required
 
 std::mutex mymutex;
@@ -66,22 +66,8 @@ int main(int argc, char ** argv) {
         Set up and initialize DB here 
    */
   // Allocate & initialize a Postgres connection object
-  connection * C;
-
-  try {
-    // Establish a connection to the database
-    // Parameters: database name, user name, user password
-    C = new connection("dbname=MARKET_XUAN_KAI user=postgres password=passw0rd");
-    if (C->is_open()) {
-      // cout << "Opened database successfully: " << C->dbname() << endl;
-    }
-    else {
-      std::cout << "Can't open database" << std::endl;
-      return 1;
-    }
-  }
-  catch (const std::exception & e) {
-    std::cerr << e.what() << std::endl;
+  connection * C = createConnection();
+  if (C == NULL) {
     return 1;
   }
 
@@ -103,8 +89,8 @@ int main(int argc, char ** argv) {
   }
 
   // Close database connection
-  // C->disconnect();
-  // delete C;
+  C->disconnect();
+  delete C;
 
   if (DEVELOPMENT) {
     std::cout << "Server starts running..." << std::endl;
@@ -124,7 +110,7 @@ int main(int argc, char ** argv) {
     }
 
     try {
-      std::thread mythread(handleXML, C, reqfd);
+      std::thread mythread(handleXML, reqfd);
       mythread.detach();
     }
     catch (std::exception & e) {
@@ -135,11 +121,9 @@ int main(int argc, char ** argv) {
     }
   }
 
+  // Free resources
   freeaddrinfo(host_info_list);
   close(sockfd);
-  // Close database connection
-  C->disconnect();
-  delete C;
 
   return 0;
 }

@@ -6,7 +6,7 @@
 #include <pqxx/pqxx>
 #include <string>
 
-#define DEBUG 1
+#define DEBUG 0
 
 using std::string;
 using namespace pqxx;
