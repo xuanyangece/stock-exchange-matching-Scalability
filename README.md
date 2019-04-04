@@ -1,1 +1,1 @@
-Branch for Kai
+A server for stock exchange.
